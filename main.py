@@ -3,12 +3,13 @@
 
 # -------------------------------------------------------
 # 1. DATA INPUT
-# Collect data for multiple products and store in lists
 # -------------------------------------------------------
 
 products = []
 revenues = []
 costs = []
+
+# TODO: ask the user for a profit goal (use float() to convert)
 
 count = int(input("How many products do you want to enter? "))
 
@@ -16,39 +17,45 @@ for i in range(count):
     print(f"\n--- Product {i + 1} ---")
     name = input("Product name: ")
     # TODO: collect revenue and costs (use float() to convert)
+    # TODO: if revenue is 0 or less, print a warning and skip this product
 
 # -------------------------------------------------------
 # 2. CALCULATIONS
-# Use a for loop to calculate for each product:
-#   - profit (revenue - costs)
-#   - gross margin % ( profit / revenue * 100 )
 # -------------------------------------------------------
 
 results = {}  # dictionary: product name -> {profit, margin_percent}
 
 for i in range(count):
-    # TODO: calculate profit and margin
+    # TODO: calculate profit (revenue - costs)
+    # TODO: calculate gross margin % (profit / revenue * 100)
+    # TODO: store profit and margin in results dictionary
     pass
 
 # -------------------------------------------------------
-# 3. DECISION LOGIC
-# Use if/elif/else to evaluate the margin for each product:
-#   > 50% — "Excellent margin"
-#   20–50% — "Good margin"
-#   < 20% — "Low margin, review your costs"
+# 3. DECISION LOGIC & REPORT
 # -------------------------------------------------------
 
 print("\n===== KPI REPORT =====")
 
 for name, data in results.items():
-    # TODO: print results and add if/elif/else evaluation
+    # TODO: print product name, profit and margin
+    # TODO: evaluate margin with if/elif/else:
+    #       > 50% — "Excellent margin"
+    #       20-50% — "Good margin"
+    #       < 20% — "Low margin, review your costs"
     pass
 
 # -------------------------------------------------------
 # 4. SUMMARY
-# TODO: calculate and print:
-#   - total revenue (sum())
-#   - total costs (sum())
-#   - total profit
-#   - average margin across all products
 # -------------------------------------------------------
+
+# TODO: calculate total revenue, total costs and total profit using sum()
+# TODO: calculate average margin across all products
+# TODO: print all summary values
+
+# TODO: find and print the product with the highest margin
+# TODO: find and print the product with the lowest margin
+
+# TODO: compare total profit to the profit goal using if/else
+#       if reached — "Goal reached!"
+#       if not — print how much is still missing
