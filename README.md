@@ -6,7 +6,7 @@ Python script that calculates business KPIs — costs, revenue, and gross margin
 
 ## Stages
 
-- [ ] **1. Data Input** — collect product names, revenues, costs and profit goal from user
+- [✓] **1. Data Input** — collect product names, revenues, costs and profit goal from user
 - [ ] **2. Calculations** — calculate profit and gross margin % for each product
 - [ ] **3. Decision Logic & Report** — evaluate each product's margin and print KPI report
 - [ ] **4. Summary** — total revenue, costs, profit, average margin, best/worst product, profit goal check
