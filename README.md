@@ -15,8 +15,8 @@ Python script that calculates business KPIs — costs, revenue, and gross margin
 
 ```python
 # region 1. DATA INPUT
-# TODO: ask the user for a profit goal
-# TODO: collect revenue and costs for each product
+# TODO: ask the user for a profit goal ✓ DONE
+# TODO: collect revenue and costs for each product ✓ DONE
 # TODO: if revenue is 0 or less, print a warning and skip this product
 # endregion
 
