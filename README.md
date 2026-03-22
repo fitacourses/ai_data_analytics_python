@@ -21,7 +21,7 @@ Python script that calculates business KPIs — costs, revenue, and gross margin
 # endregion
 
 # region 2. CALCULATIONS
-# TODO: calculate profit (revenue - costs)
+# TODO: calculate profit (revenue - costs) ✓ DONE
 # TODO: calculate gross margin % (profit / revenue * 100)
 # TODO: store profit and margin in results dictionary
 # endregion
