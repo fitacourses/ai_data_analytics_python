@@ -62,8 +62,7 @@ for name, data in results.items():
         print("Low margin, review your costs")
 # endregion
 
-# region 4. SUMMARY
-# TODO: calculate total revenue, total costs and total profit
+50
 # TODO: calculate average margin across all products
 # TODO: print all summary values
 
