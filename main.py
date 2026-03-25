@@ -7,7 +7,7 @@ revenues = []
 costs = []
 
 # TODO-DONE: ask the user for a profit goal (use float() to convert)
-profit_goal = float(input("What's your profit goal (in €)? "))
+profit_goal = float(input("What's your profit goal (in money)? "))
 
 count = int(input("How many products do you want to enter? "))
 
@@ -17,8 +17,8 @@ for i in range(count):
     print(f"\n--- Product {i + 1} ---")
     product = input("Product name: ")
     # TODO-DONE: collect revenue and costs (use float() to convert)
-    revenue = float(input("How much did you earn from this product (in €)? "))
-    cost = float(input("How much did it cost to make/buy this product (in €)? "))
+    revenue = float(input("How much did you earn from this product? "))
+    cost = float(input("How much did it cost to make/buy this product? "))
     # TODO-DONE: if revenue is 0 or less, print a warning and skip this product
     if revenue <= 0:
         print(f"Warning: invalid revenue for product {product} ({revenue})")
@@ -47,7 +47,7 @@ print("\n===== KPI REPORT =====")
 # loop trough each key-value pair, product name and nested dictionary with profit and margin
 for name, data in results.items():
     # TODO-DONE: print product name, profit and margin
-    print(f"Product name: {name}\n Profit: {data['profit']}\n Margin: {data['margin']}")
+    print(f"Product name: {name}\n Profit: {data['profit']}\n Margin: {data['margin']} \n")
     # TODO-DONE: evaluate margin with if/elif/else:
     #       > 50% — "Excellent margin"
     #       20-50% — "Good margin"
@@ -69,22 +69,21 @@ total_profit = sum(value['profit'] for value in results.values())
 # TODO-DONE: calculate average margin across all products
 avg_margin = sum(percent['margin'] for percent in results.values()) / len(results)
 # TODO-DONE: print all summary values
-print(f"Total costs: {total_costs}\n Total revenue: {total_revenue}\n Total profit: {total_profit}\n Average margin: {avg_margin}")
+print(f"Total costs: {total_costs}\n Total revenue: {total_revenue}\n Total profit: {total_profit}\n Average margin: {avg_margin} \n")
 # TODO-DONE: if current product margin is higher than highest so far, update best product
 # TODO-DONE: if current product margin is lower than lowest so far, update worst product
-best_product = None
-best_margin = float('-inf') # starting point is worse than anything that's iterated
-worst_product = None
-worst_margin = float('inf') # starting point is better than anything that's iterated
+best_product, worst_product = None, None
+# starting point is lower/higher than anything that's iterated
+best_margin, worst_margin = float('-inf'), float('-inf')
 # loop through all key-value pairs in results dictionary
 for name, data in results.items():
     if data['margin'] > best_margin:
         best_margin = data['margin']
         best_product = name
-    elif data['margin'] < worst_margin:
+    if data['margin'] < worst_margin:
         worst_margin = data['margin']
         worst_product = name
-print(f"Best product {best_product}\n Worst product: {worst_product}\n Best margin: {best_margin} \n Worst margin: {worst_margin}")
+print(f"Best product {best_product}\n Worst product: {worst_product}\n Best margin: {best_margin} \n Worst margin: {worst_margin} \n")
 
 # TODO: compare total profit to the profit goal using if/else
 if total_profit > profit_goal:
