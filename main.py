@@ -87,6 +87,9 @@ for name, data in results.items():
 print(f"Best product {best_product}\n Worst product: {worst_product}\n Best margin: {best_margin} \n Worst margin: {worst_margin}")
 
 # TODO: compare total profit to the profit goal using if/else
-#       if reached — "Goal reached!"
-#       if not — print how much is still missing
+if total_profit > profit_goal:
+    print("Goal reached!")
+else:
+    missing = profit_goal - total_profit
+    print(f"You missed by {missing} from the {profit_goal}")
 # endregion
