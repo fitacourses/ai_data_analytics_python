@@ -68,14 +68,23 @@ total_costs = sum(costs)
 total_revenue = sum(revenues)
 # sum all key "profit" values by iterating through each nested dictionary in results
 total_profit = sum(value['profit'] for value in results.values())
-# TODO: calculate average margin across all products
+# TODO-DONE: calculate average margin across all products
 avg_margin = sum(percent['margin'] for percent in results.values()) / len(results)
-# TODO: print all summary values
+# TODO-DONE: print all summary values
 print(f"Total costs: {total_costs}")
 print(f"Total revenue: {total_revenue}")
 print(f"Total profit: {total_profit}")
 print(f"Average margin: {avg_margin}")
-# TODO: find and print the product with the highest margin
+# TODO-DONE: find and print the product with the highest margin
+best_product = None
+best_margin = 0
+for name, data in results.items():
+# TODO-DONE: if current product margin is higher than highest so far, update best product
+    if data['margin'] > best_margin:
+        best_margin = data['margin']
+        best_product = name
+print(f"Best margin: {best_margin}")
+print(f"Best product: {best_product}")
 # TODO: find and print the product with the lowest margin
 
 # TODO: compare total profit to the profit goal using if/else
