@@ -16,26 +16,29 @@ Columns: `runner`, `day`, `distance`, `pace`, `bpm`, `elevation`
 
 ## KPIs Calculated
 
-- Total distance per runner
-- Total elevation gain per runner
-- Average pace per runner
-- Average heart rate per runner
-- Efficiency score per session (based on distance, pace, bpm and elevation)
-- Average efficiency per runner — determines the weekly winner
-- Best day per runner (highest efficiency score)
-- Runner category based on efficiency: Elite / Competitive / Recreational
+- Total distance per runner (km)
+- Total elevation gain per runner (m)
+- Average pace per runner (min/km, converted from MM:SS)
+- Average heart rate per runner (bpm)
+- Performance score per session — weighted formula using distance, pace, elevation and heart rate
+- Best training day per runner — day with highest performance score
+- Consistency score per runner — standard deviation of daily distance (lower = more consistent)
+- Weekly winner score — combined average performance and consistency score
 
 ---
 
 ## Stages
 
 1. Load data — read CSV file using pandas
-2. Calculations — calculate KPIs for each runner (distance, elevation, pace, bpm)
-3. Efficiency — calculate efficiency score per session and average per runner
-4. Best day — determine each runner's most efficient training day
-5. Leaderboard — print daily or weekly leaderboard based on user input
-6. Categories — classify each runner as Elite, Competitive or Recreational
-7. Export — save final leaderboard to `results.xlsx` using openpyxl
+2. Validation — check if any runner has fewer than 6 or more than 11 sessions
+3. Calculations — calculate KPIs for each runner (distance, elevation, pace, bpm)
+4. Pace — convert MM:SS to decimal minutes per km
+5. Performance score — calculate weighted perf_score per session
+6. Consistency — calculate standard deviation of daily distance per runner
+7. Best day — determine each runner's most efficient training day
+8. Leaderboard — print daily or weekly leaderboard based on user input
+9. Winner score — combine average performance and consistency into final ranking
+10. Export — save final leaderboard to results.xlsx using openpyxl
 
 ---
 

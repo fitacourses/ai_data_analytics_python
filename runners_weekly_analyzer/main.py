@@ -21,4 +21,4 @@ df["pace"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
 # 1/pace * 10 * 0.7 — faster pace raises score, 1/pace flips it, *10 scales decimal up
 # elevation/100 * 0.6 — more climbing raises score
 # bpm/1000 * 0.3 — high heart rate lowers score (penalizes strain)
-df["efficiency"] = (df["distance"] * 0.35) + (1/df["pace"] * 10 * 0.7) + (df["elevation"]/100 * 0.6) - (df["bpm"]/1000 * 0.3)
+df["perf_score"] = (df["distance"] * 0.35) + (1/df["pace"] * 10 * 0.7) + (df["elevation"]/100 * 0.6) - (df["bpm"]/1000 * 0.3)
