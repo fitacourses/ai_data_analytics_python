@@ -3,11 +3,18 @@ import pandas as pd
 # pandas reads data.csv and stores it as a table in df (dataFrame - datu tabula)
 df = pd.read_csv("data.csv")
 
+# TODO: validate session count per runner (min 6, max 11)
+sessions_per_runner = df.groupby("runner")["day"].count()
+for runner, count in sessions_per_runner.items():
+    if count < 6:
+        print(f"{runner}: You haven't ran enough sessions - {count}! Six is minimum. LACE UP!")
+    elif count > 11:
+        print(f"{runner}: You've ran too many sessions - {count}! Eleven is maximum. You've overworked! Try removing excess sessions.")
+
 # TODO-DONE: group by runner and calculate total distance, average pace, average heart rate, total elevation
 # hint: df.groupby("runner")["kolonna"].sum() / .mean()
-kpi = (df.groupby("runner")[["distance", "time", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
-kpi["bpm"] = kpi["bpm"].round(1) # round bpm to decimal
-print(kpi)
+stats  = (df.groupby("runner")[["distance", "time", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
+stats["bpm"] = stats["bpm"].round(1) # round bpm to decimal
 
 # TODO-DONE: convert time column from MM:SS to decimal minutes (pace)
 # split "time" column by ":" to get minutes and seconds
