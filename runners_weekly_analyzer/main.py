@@ -6,4 +6,4 @@ df = pd.read_csv("data.csv")
 # TODO-DONE: group by runner and calculate total distance, average pace, average heart rate
 # hint: df.groupby("runner")["kolonna"].sum() / .mean()
 
-print(df.groupby("runner")[["distance", "pace", "bpm"]].agg({"distance": "sum", "pace": "mean", "bpm": "mean"}))
+print(df.groupby("runner")[["distance", "pace", "bpm", "elevation"]].agg({"distance": "sum", "elevation": "sum","pace": "mean", "bpm": "mean"}))
