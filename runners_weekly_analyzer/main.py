@@ -17,8 +17,7 @@ for runner, count in sessions_per_runner.items():
 
 # region 3. Calculations
 # TODO-DONE: group by runner and calculate total distance, average pace, average heart rate, total elevation
-# hint: df.groupby("runner")["kolonna"].sum() / .mean()
-stats  = (df.groupby("runner")[["distance", "time", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
+stats  = (df.groupby("runner")[["distance", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
 # endregion
 
 # region 4. Average pace
@@ -41,19 +40,23 @@ print(stats)
 # elevation/50 * 0.6 — more climbing raises score
 # bpm/1000 * 0.3 — high heart rate lowers score (penalizes strain)
 df["perf_score"] = (df["distance"] * 0.35) + (1/df["pace"] * 10 * 0.7) + (df["elevation"]/50 * 0.6) - (df["bpm"]/1000 * 0.3)
+
+# TODO: calculate average perf_score per runner and store in stats
+# hint: stats["avg_perf"] = df.groupby("runner")["perf_score"].mean()
+
 # endregion
 
-# region 6. Consistency
+# region 6. Best day
+# TODO: find the day with highest perf_score per runner
+# hint: df.groupby("runner")["perf_score"].idxmax() gives row index of best session
+# use that index to get the day: df.loc[...]["day"]
+# endregion
+
+# region 7. Consistency
 # TODO: calculate standard deviation of daily distance per runner
 # hint: df.groupby("runner")["distance"].std()
 # store in stats["consistency"]
 # lower std = more consistent runner
-# endregion
-
-# region 7. Best day
-# TODO: find the day with highest perf_score per runner
-# hint: df.groupby("runner")["perf_score"].idxmax() gives row index of best session
-# use that index to get the day: df.loc[...]["day"]
 # endregion
 
 # region 8. Leaderboard
