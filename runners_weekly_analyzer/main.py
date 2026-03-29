@@ -44,12 +44,11 @@ stats["avg_perf_score"] = df.groupby("runner")["perf_score"].mean()
 # endregion
 
 # region 6. Best day
-# TODO: find the day with highest perf_score per runner
-daily_perf = df.groupby(["runner", "day"])["perf_score"].mean() # group by runner and day, average performance per day
-day_names = {1: "Pirmdiena", 2: "Otrdiena", 3: "Trešdiena", 4: "Ceturtdiena", 5: "Piektdiena", 6: "Sestdiena", 7: "Svētdiena"}
+# TODO: find the day with highest performance for each runner
+daily_perf = df.groupby(["runner", "day"])["perf_score"].mean() # group by runner and day, get average performance per day
 best_day = daily_perf.groupby("runner").idxmax().str[1] # find day with highest average performance for runners, extract day number
-best_day = best_day.map(day_names)
 stats["best_day"] = best_day
+print(stats)
 # endregion
 
 # region 7. Consistency
@@ -57,8 +56,7 @@ stats["best_day"] = best_day
 # endregion
 
 # region 8. Leaderboard
-# TODO: ask user to input a day number (1-7) or 0 for full weekly leaderboard
-# if day == 0 — print full stats sorted by winner_score
+# TODO: ask user to input "day" for example "Friday" for day leaderboard or "full" for full weekly leaderboard
 # else — filter df by day and print sorted by perf_score
 # endregion
 
