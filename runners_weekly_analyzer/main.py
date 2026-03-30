@@ -1,7 +1,7 @@
 # region 1. Load data
-# to import pd as short for pandas for this main
 import pandas as pd
-# pandas reads data.csv and stores it as a table in df (dataFrame - datu tabula)
+pd.set_option("display.max_columns", None) 
+# pandas as pd reads data and stores it in "df" - dataFrame
 df = pd.read_csv("data.csv")
 # endregion
 
@@ -48,23 +48,20 @@ stats["avg_perf_score"] = df.groupby("runner")["perf_score"].mean()
 daily_perf = df.groupby(["runner", "day"])["perf_score"].mean() # get average performance per day
 best_day = daily_perf.groupby("runner").idxmax().str[1] # find day with highest average performance, extract day number
 stats["best_day"] = best_day
-print(stats)
 # endregion
 
 # region 7. Consistency
-# TODO: # calculate deviation of runner performance troughout the week(lower = more consistent performance)
+# TODO-DONE: # calculate deviation of runner performance troughout the week(lower = more consistent performance)
 stats["consistency"] = df.groupby("runner")["perf_score"].std()
-print(stats)
 # endregion
 
-# region 8. Leaderboard
-# TODO: ask user to input "day" for example "Friday" for day leaderboard or "full" for full weekly leaderboard
-# else — filter df by day and print sorted by perf_score
+# region 8. Winner score
+# TODO-DONE: combine average performance and consistency into final ranking
+stats["power_ranking"] = (stats["avg_perf_score"] * 0.7) + (1/stats["consistency"] * 0.3)
 # endregion
 
-# region 9. Winner score
-# TODO: combine avg perf_score and consistency into final ranking
-# print winner — runner with highest winner_score
+# region 9. Leaderboard
+# TODO-DONE: ask user to input for example "Friday" for daily leaderboard or "full" for full weekly leaderboard
 # endregion
 
 # region 10. Export

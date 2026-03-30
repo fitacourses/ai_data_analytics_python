@@ -37,8 +37,8 @@ Columns: `runner`, `day`, `distance`, `time`, `elevation`, `bpm`
 - [ ] 5. Performance score — calculate weighted perf_score per session
 - [ ] 6. Best day — determine each runner's most efficient training day
 - [ ] 7. Consistency — calculate standard deviation of daily distance per runner
-- [ ] 8. Leaderboard — print daily or weekly leaderboard based on user input
-- [ ] 9. Winner score — combine average performance and consistency into final ranking
+- [ ] 8. Winner score — combine average performance and consistency into final ranking
+- [ ] 9. Leaderboard — print daily or weekly leaderboard based on user input
 - [ ] 10. Export — save final leaderboard to results.xlsx using openpyxl
 
 ---
