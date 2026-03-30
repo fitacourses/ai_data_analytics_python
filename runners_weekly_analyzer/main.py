@@ -6,17 +6,22 @@ df = pd.read_csv("data.csv")
 
 # region 2. Validation
 # TODO: validate session count per runner (min 6, max 11)
+
 sessions_per_runner = df.groupby("runner")["day"].count()
+warnings = {}
 for runner, count in sessions_per_runner.items():
     if count < 6:
-        print(f"{runner}haven't ran enough sessions - {count}! Six is minimum for the week. LACE UP!")
+        warnings[runner] = f"Too few sessions ({count})"
     elif count > 11:
-        print(f"{runner}ran too many sessions - {count}! Eleven is maximum for the week. Try removing excess sessions.")
+        warnings[runner] = f"Too many sessions ({count})"
+    else:
+        warnings[runner] = ""
 # endregion
 
 # region 3. Calculations
 # TODO-DONE: group by runner and calculate total distance, average pace, average heart rate, total elevation
 stats  = (df.groupby("runner")[["distance", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
+stats["warning"] = [warnings[r] for r in stats.index]
 # endregion
 
 # region 4. Average pace
@@ -60,28 +65,31 @@ stats["power_ranking"] = (stats["avg_perf_score"] * 0.7) + (1/stats["consistency
 # endregion
 
 # region 9. Leaderboard
-# TODO-DONE: ask user to input for example "Friday" for daily leaderboard or "full" for full weekly leaderboard
-day = input("Enter day (e.g. 'Friday') or 'Full' for weekly leaderboard: ")
-if day == "Full":
-    leaderboard = stats[["avg_perf_score", "consistency", "power_ranking"]].sort_values("power_ranking", ascending=False)
-else:
-    day_df = df[df["day"] == day] # filter df to only rows where day matches user input
-    leaderboard = day_df.groupby("runner")["perf_score"].mean().sort_values(ascending=False) # sort best first
+# TODO-DONE: 
+weekly_leaderboard = stats[["avg_perf_score", "consistency", "power_ranking"]].sort_values("power_ranking", ascending=False)
+
+# daily leaderboards for each day that exists in the data
+daily_leaderboards = {}
+for day in df["day"].unique():
+    day_df = df[df["day"] == day]
+    daily_leaderboards[day] = day_df.groupby("runner")["perf_score"].mean().sort_values(ascending=False)
 # endregion
 
 # region 10. Export
 # TODO: save stats table to results.xlsx and round numbers
-# leaderboard uses raw df values, so round it here
-leaderboard = leaderboard.round(2) 
 
-# round the stats table values so Weekly Stats sheet looks clean
+# round stats
+stats = stats.round(2)
 stats["bpm"] = stats["bpm"].round(1)
-stats["avg_pace"] = stats["avg_pace"].round(2)
-stats["avg_perf_score"] = stats["avg_perf_score"].round(2)
-stats["consistency"] = stats["consistency"].round(2)
-stats["power_ranking"] = stats["power_ranking"].round(2)
 
-with pd.ExcelWriter("results.xlsx") as writer: # creates or overwrites results.xlsx
+# round leaderboards
+weekly_leaderboard = weekly_leaderboard.round(2)
+for day in daily_leaderboards:
+    daily_leaderboards[day] = daily_leaderboards[day].round(2)
+
+with pd.ExcelWriter("results.xlsx") as writer:
     stats.to_excel(writer, sheet_name="Weekly Stats")
-    leaderboard.to_excel(writer, sheet_name="Leaderboard")
+    weekly_leaderboard.to_excel(writer, sheet_name="Weekly Leaderboard")
+    for day, table in daily_leaderboards.items():
+        table.to_excel(writer, sheet_name=str(day))
 # endregion
