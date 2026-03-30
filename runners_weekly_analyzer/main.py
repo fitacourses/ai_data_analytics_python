@@ -1,7 +1,6 @@
 # region 1. Load data
 import pandas as pd
-pd.set_option("display.max_columns", None) 
-# pandas as pd reads data and stores it in "df" - dataFrame
+# pandas "short for pd" reads data and stores table as "df" - dataFrame
 df = pd.read_csv("data.csv")
 # endregion
 
@@ -10,9 +9,9 @@ df = pd.read_csv("data.csv")
 sessions_per_runner = df.groupby("runner")["day"].count()
 for runner, count in sessions_per_runner.items():
     if count < 6:
-        print(f"{runner}: You haven't ran enough sessions - {count}! Six is minimum for the week. LACE UP!")
+        print(f"{runner}haven't ran enough sessions - {count}! Six is minimum for the week. LACE UP!")
     elif count > 11:
-        print(f"{runner}: You've ran too many sessions - {count}! Eleven is maximum for the week. Try removing excess sessions.")
+        print(f"{runner}ran too many sessions - {count}! Eleven is maximum for the week. Try removing excess sessions.")
 # endregion
 
 # region 3. Calculations
@@ -63,16 +62,26 @@ stats["power_ranking"] = (stats["avg_perf_score"] * 0.7) + (1/stats["consistency
 # region 9. Leaderboard
 # TODO-DONE: ask user to input for example "Friday" for daily leaderboard or "full" for full weekly leaderboard
 day = input("Enter day (e.g. 'Friday') or 'Full' for weekly leaderboard: ")
-if day == "full":
+if day == "Full":
     leaderboard = stats[["avg_perf_score", "consistency", "power_ranking"]].sort_values("power_ranking", ascending=False)
-    print(leaderboard)
 else:
     day_df = df[df["day"] == day] # filter df to only rows where day matches user input
     leaderboard = day_df.groupby("runner")["perf_score"].mean().sort_values(ascending=False) # sort best first
-    print(leaderboard)
 # endregion
 
 # region 10. Export
-# TODO: save stats table to results.xlsx
-# hint: stats.to_excel("results.xlsx")
+# TODO: save stats table to results.xlsx and round numbers
+# leaderboard uses raw df values, so round it here
+leaderboard = leaderboard.round(2) 
+
+# round the stats table values so Weekly Stats sheet looks clean
+stats["bpm"] = stats["bpm"].round(1)
+stats["avg_pace"] = stats["avg_pace"].round(2)
+stats["avg_perf_score"] = stats["avg_perf_score"].round(2)
+stats["consistency"] = stats["consistency"].round(2)
+stats["power_ranking"] = stats["power_ranking"].round(2)
+
+with pd.ExcelWriter("results.xlsx") as writer: # creates or overwrites results.xlsx
+    stats.to_excel(writer, sheet_name="Weekly Stats")
+    leaderboard.to_excel(writer, sheet_name="Leaderboard")
 # endregion
