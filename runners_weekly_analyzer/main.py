@@ -5,8 +5,7 @@ df = pd.read_csv("data.csv")
 # endregion
 
 # region 2. Validation
-# TODO: validate session count per runner (min 6, max 11)
-
+# TODO-DONE: count each runner's sessions and store a warning (or empty string) in a dictionary 
 sessions_per_runner = df.groupby("runner")["day"].count()
 warnings = {}
 for runner, count in sessions_per_runner.items():
@@ -19,20 +18,36 @@ for runner, count in sessions_per_runner.items():
 # endregion
 
 # region 3. Calculations
-# TODO-DONE: group by runner and calculate total distance, average pace, average heart rate, total elevation
+# TODO-DONE: group by runner and calculate the stats
 stats  = (df.groupby("runner")[["distance", "elevation", "bpm"]].agg({"distance": "sum", "elevation": "sum", "bpm": "mean"}))
-stats["warning"] = [warnings[r] for r in stats.index]
+
+# TODO-DONE: 
+# add warning column to stats
+# look up each runner's string from the warnings dictionary
+# set the value in the "warning" column 
+stats["warning"] = ""
+for runner in stats.index:
+    stats.loc[runner, "warning"] = warnings[runner]
 # endregion
 
-# region 4. Average pace
-# TODO-DONE: 
-parts = df["time"].str.split(":") # split time on ":" to get minutes and seconds
+# region 4. Average pace 
+# TODO-DONE:
+# split time on ":" to get minutes and seconds
 # get elements from parts and convert to ints, divide by 60 to get pace in decimal minutes, store in new column "pace"
-df["pace"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
 # add average pace per runner to stats table
+
+parts = df["time"].str.split(":") 
+df["pace"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
 total_time = df.groupby("runner")["pace"].sum()
 total_dist = df.groupby("runner")["distance"].sum()
 stats["avg_pace"] = total_time / total_dist
+
+# TODO-DONE: convert decimal pace to MM:SS string
+for runner in stats.index:
+    decimal_pace = stats.loc[runner, "avg_pace"]  # get decimal pace for this runner e.g. 5.86
+    minutes = int(decimal_pace)                    # take only the whole number part e.g. 5
+    seconds = round((decimal_pace - minutes) * 60) # subtract minutes, multiply leftover by 60 to get seconds e.g. 0.86 * 60 = 52
+    stats.loc[runner, "avg_pace"] = f"{minutes}:{seconds:02d}" # combine into MM:SS string, :02d ensures 2 digits e.g. 5:52
 # endregion
 
 # region 5. Performance score
@@ -47,35 +62,27 @@ df["perf_score"] = (df["distance"] * 0.35) + (1/df["pace"] * 10 * 0.7) + (df["el
 stats["avg_perf_score"] = df.groupby("runner")["perf_score"].mean()
 # endregion
 
-# region 6. Best day
-# TODO: find the day with highest performance for each runner and store in stats
-daily_perf = df.groupby(["runner", "day"])["perf_score"].mean() # get average performance per day
-best_day = daily_perf.groupby("runner").idxmax().str[1] # find day with highest average performance, extract day number
-stats["best_day"] = best_day
-# endregion
-
-# region 7. Consistency
-# TODO-DONE: # calculate deviation of runner performance troughout the week(lower = more consistent performance)
+# region 6. Consistency
+# TODO-DONE: calculate deviation of runner performance troughout the week(lower = more consistent performance)
 stats["consistency"] = df.groupby("runner")["perf_score"].std()
 # endregion
 
-# region 8. Winner score
+# region 7. Winner score
 # TODO-DONE: combine average performance and consistency into final ranking
 stats["power_ranking"] = (stats["avg_perf_score"] * 0.7) + (1/stats["consistency"] * 0.3)
 # endregion
 
-# region 9. Leaderboard
-# TODO-DONE: 
+# region 8. Leaderboard
+# TODO-DONE: # create daily and weekly leaderboards 
 weekly_leaderboard = stats[["avg_perf_score", "consistency", "power_ranking"]].sort_values("power_ranking", ascending=False)
 
-# daily leaderboards for each day that exists in the data
-daily_leaderboards = {}
-for day in df["day"].unique():
-    day_df = df[df["day"] == day]
-    daily_leaderboards[day] = day_df.groupby("runner")["perf_score"].mean().sort_values(ascending=False)
+daily_leaderboards = {}                              # empty dictionary to store leaderboard for each day
+for day in df["day"].unique():                       # loop through each unique day that exists in the data
+    day_df = df[df["day"] == day]                    # filter rows to only this day
+    daily_leaderboards[day] = day_df.groupby("runner")["perf_score"].mean().sort_values(ascending=False) # group by runner, get average perf score, sort best first
 # endregion
 
-# region 10. Export
+# region 9. Export
 # TODO: save stats table to results.xlsx and round numbers
 
 # round stats
