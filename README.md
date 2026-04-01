@@ -29,31 +29,27 @@ Each repository here represents one of the four course assignments — grouped i
 
 This organization contains **4 assignments**, one for each module of the course.
 
-### 📝 Assignment 1 — Syntax & Logic
-> *Python fundamentals: controlling program flow with conditions, loops, and functions.*
+### 📝 Assignment 1 — KPI Calculator
+> *Syntax & Logic — Python fundamentals with conditions, loops, and dictionaries.*
 
-Practice writing clean, readable Python code. Learn how to structure logic, handle errors, and think like a programmer from day one.
+A terminal-based script that calculates business KPIs — revenue, costs, profit, and gross margin — based on manually entered data. Evaluates each product's margin, prints a full KPI report, and checks whether the total profit meets a user-defined goal. No files, no external libraries — pure Python logic.
 
 ---
 
-### 📊 Assignment 2 — Data Processing
-> *Working with files and the powerful Pandas library.*
+### 📊 Assignment 2 — KPI File Reader: Weekly Running Competition
+> *Data Processing — CSV files, pandas, and openpyxl.*
 
-Read, clean, and analyze real datasets from CSV and Excel files. Learn how to filter, group, and summarize data with just a few lines of code.
+A script that reads weekly running training data from a CSV file and calculates performance KPIs for a group of runners competing against each other. Calculates total distance, elevation, average pace, heart rate, session performance scores, consistency scores, and determines a weekly winner. Exports the final leaderboard to an Excel file.
 
 ---
 
 ### 📈 Assignment 3 — Visualization
-> *Turning dry numbers into understandable charts.*
-
-Use Matplotlib and/or Seaborn to build clear, informative visuals. Learn how to tell a story with your data through bar charts, line graphs, and more.
+> *Coming soon*
 
 ---
 
 ### 🌐 Assignment 4 — Web Scraping
-> *Automating data collection from online resources.*
-
-Write scripts that fetch and parse real-time data from the web. Learn to work with HTML structure and extract exactly the information you need.
+> *Coming soon*
 
 ---
 
@@ -72,11 +68,8 @@ Write scripts that fetch and parse real-time data from the web. Learn to work wi
 
 1. **Clone** the assignment repository you want to work on
 2. Make sure Python 3 is installed on your machine
-3. Install dependencies (each repo has its own `requirements.txt`):
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Follow the instructions in each assignment's own `README.md`
+3. Install dependencies if needed (e.g. `pip install pandas openpyxl`)
+4. Run `main.py`
 
 ---
 
