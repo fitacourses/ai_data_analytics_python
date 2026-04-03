@@ -18,6 +18,7 @@ Each repository here represents one of the four course assignments — grouped i
 
 | Module | Topic | Skills |
 |--------|-------|--------|
+
 | 1 | **Syntax & Logic** | Variables, conditions, loops, functions |
 | 2 | **Data Processing** | Working with files, the Pandas library |
 | 3 | **Visualization** | Turning raw data into meaningful charts |
@@ -30,6 +31,7 @@ Each repository here represents one of the four course assignments — grouped i
 This organization contains **4 assignments**, one for each module of the course.
 
 ### 📝 Assignment 1 — KPI Product margin calculator
+
 > *Syntax & Logic — Python fundamentals with conditions, loops, and dictionaries.*
 
 A terminal-based script that calculates business KPIs — revenue, costs, profit, and gross margin — based on manually entered data. Evaluates each product's margin, prints a full KPI report, and checks whether the total profit meets a user-defined goal. No files, no external libraries — pure Python logic.
@@ -37,6 +39,7 @@ A terminal-based script that calculates business KPIs — revenue, costs, profit
 ---
 
 ### 📊 Assignment 2 — KPI File Reader: Runners weekly analyzer
+
 > *Data Processing — CSV files, pandas, and openpyxl.*
 
 A script that reads weekly running training data from a CSV file and calculates performance KPIs for a group of runners competing against each other. Calculates total distance, elevation, average pace, heart rate, session performance scores, consistency scores, and determines a weekly winner. Exports the final leaderboard to an Excel file.
@@ -44,11 +47,13 @@ A script that reads weekly running training data from a CSV file and calculates 
 ---
 
 ### 📈 Assignment 3 — Visualization
+
 > *Coming soon*
 
 ---
 
 ### 🌐 Assignment 4 — Web Scraping
+
 > *Coming soon*
 
 ---
