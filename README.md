@@ -88,7 +88,3 @@ A script that reads weekly running training data from a CSV file and calculates 
 > *"We will take an exciting journey together — from Python syntax basics to building your own independent data analysis project."*
 
 ---
-
-<div align="center">
-  Made with ☕ and Python · FITA Courses
-</div>
