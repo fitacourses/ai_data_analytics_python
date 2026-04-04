@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # region 2. TODO-DONE: Load data
 # read the CSV file into a pandas 
 df = pd.read_csv("data.csv") 
-# engregion
+# endregion
 
 # region 3. TODO-DONE: Convert time to decimal pace
 # split the time column into minutes and seconds separately
@@ -23,26 +23,20 @@ df["elevation_score"] = (df["elevation"] / 1000) * 8 # pace rewards faster sessi
 df["bpm_score"] = (200 - df["bpm"]) * 0.04 # elevation rewards more climbing
 # endregion
 
-# region 5. TODO: Calculate total performance score per session
+# region 5. TODO-DONE: Calculate total performance score per session
 df["perf_score_session"] = df["distance_score"] + df["pace_score"] + df["elevation_score"] + df["bpm_score"]
 # endregion
 
-# region 6. TODO: Group data by runner
+# region 6. TODO-DONE: Group data by runner
 # group by runner and calculate average for each score
 grouped = df.groupby("runner")
-perf_score_avg = grouped[["distance_score", "pace_score", "elevation_score", "bpm_score"]].mean()
+avg_perf_score = grouped[["distance_score", "pace_score", "elevation_score", "bpm_score"]].mean()
 # endregion
 
-# region 7. TODO: Build stacked bar chart
-# create and save figure and axes
-fig, ax = plt.subplots()
-perf_score_avg.plot(
-    kind="bar", 
-    stacked=True, 
-    ax=ax)
+# region 7. TODO Build stacked bar chart
 # endregion
 
-# region 8. TODO: Customize chart
+# region 8. TODO: Customize
 # endregion
 
 # region 9. TODO: Show result
