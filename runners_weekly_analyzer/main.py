@@ -36,7 +36,7 @@ for runner in stats.index:
 # endregion
 
 # region 4. TODO-DONE: Average pace  
-# split time column into minutes and seconds seperately
+# split time column into minutes and seconds separately
 parts = df["time"].str.split(":") 
 
 # convert the MM:SS time values into decimal minutes
