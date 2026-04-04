@@ -16,25 +16,10 @@ Each repository here represents one of the four course assignments — grouped i
 
 ## 📚 What You Will Learn
 
-### 1. **Syntax & Logic**
-
-- Variables
-- Conditions
-- Loops
-- Functions
-
-### 2. **Data Processing**
-
-- Working with files
-- The Pandas library
-
-### 3. **Visualization**
-
-- Turning raw data into meaningful charts
-
-### 4. **Web Scraping**
-
-- Automating data collection from online sources
+- **Syntax & Logic** — Variables, conditions, loops, functions  
+- **Data Processing** — Working with files, the Pandas library  
+- **Visualization** — Turning raw data into meaningful charts  
+- **Web Scraping** — Automating data collection from online sources
 
 ---
 
