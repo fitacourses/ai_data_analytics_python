@@ -14,8 +14,8 @@ parts = df["time"].str.split(":")
 
 # convert the MM:SS time values into decimal minutes
 minutes_total = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
-df["pace"] = minutes_total/ df["distance"].round(2)
-print(df[["time", "distance", "pace"]].head())
+df["pace"] = (minutes_total/ df["distance"]).round(2)
+# debug - print(df[["time", "distance", "pace"]].head())
 # endregion
 
 # region 4. TODO-DONE: Calculate session score components
@@ -49,17 +49,22 @@ avg_perf_score.plot(
 # endregion
 
 # region 8. TODO-DONE: Customize
+# set title and axis name
 ax.set_title("Runner Performance Comparison")
 ax.set_xlabel("Runner")
 ax.set_ylabel("Average Performance Score")
 
+# rename columns for cleaner legend
+ax.legend(["Distance", "Pace", "Elevation", "Heart Rate"])
+
 # "x" axe labels/numbers rotation
 ax.tick_params(axis="x", rotation=45)
-ax.grid(axis="y", linestyle="--", alpha=0.5)
+ax.grid(axis="y", linestyle="--", alpha=0.6)
 # adjust spacing, so it fits in figure
 plt.tight_layout()
 # endregion
 
 # region 9. TODO-DONE: Show result
+# debug - print(avg_perf_score)
 plt.savefig("runner_performance.png")
 # endregion
