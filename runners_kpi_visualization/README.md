@@ -1,114 +1,123 @@
-# 📌 Runner Performance Visualization Project
+# 📊 Runner Performance Visualization
 
 ## 📌 Overview
 
-This project reads weekly running session data from a CSV file and creates a stacked bar chart to compare average runner performance.
+This project reads weekly running session data from a CSV file and generates a stacked bar chart comparing runner performance.
 
-The visualization is based on a custom performance score made from four components:
+The visualization is based on a normalized performance scoring system and shows how each metric contributes to the final score.
 
-- Distance score
-- Pace score
-- Elevation score
-- Heart rate score
-
-Each session is scored individually first, then the average score is calculated for each runner. This makes the comparison clearer and helps show what contributes to each runner’s overall result.
+All calculations are performed automatically using a single Python script.
 
 ---
 
 ## 📂 Dataset Format (`data.csv`)
 
-Your input file **must include the following columns**:
+Your input file must include the following columns:
 
-| Column     | Description                  |
-|------------|------------------------------|
-| runner     | Runner's name                |
-| day        | Day of the week              |
-| distance   | Distance run (km)            |
-| time       | Duration in MM:SS            |
-| elevation  | Elevation gain (m)           |
-| bpm        | Average heart rate (bpm)     |
+| Column     | Description              |
+|------------|--------------------------|
+| runner     | Runner name              |
+| day        | Day of the week          |
+| distance   | Distance run (km)        |
+| time       | Duration (MM:SS)         |
+| elevation  | Elevation gain (m)       |
+| bpm        | Average heart rate (bpm) |
 
-✅ Each row represents **one running session**.
-
----
-
-## 📊 Score Components the Script Calculates
-
-### ✅ Distance Score
-
-Rewards longer running distance.
-
-### ✅ Pace Score
-
-Rewards faster pace.
-
-### ✅ Elevation Score
-
-Rewards sessions with more climbing.
-
-### ✅ Heart Rate Score
-
-Rewards lower average heart rate.
+Each row represents **one running session**.
 
 ---
 
-### ✅ Total Performance Score
+## 📊 KPIs the Script Calculates
 
-Each session gets a total performance score based on all four score components.
-
----
-
-### ✅ Average Performance Score per Runner
-
-After scoring each session, the script calculates the average score for each runner.
-
-This gives a clearer overall comparison than looking at single sessions one by one.
+- ✅ Distance Score  
+- ✅ Pace Score  
+- ✅ Elevation Score  
+- ✅ BPM Bonus  
 
 ---
 
-## ⚙️ Script Workflow (Step-By-Step)
+## ✅ Performance Score
 
-1. Load data from CSV  
-2. Convert `MM:SS` time values into decimal pace  
-3. Calculate score components for each session  
-4. Calculate total performance score per session  
-5. Group data by runner  
-6. Calculate average score contribution per runner  
-7. Build a stacked bar chart  
-8. Customize the chart for readability  
-9. Display the final visualization  
+Each session receives a normalized **base performance score (0–1 per metric)** based on:
+
+- Distance (0–30 km)
+- Pace (8:00–3:30 min/km)
+- Elevation (50–500 m)
+
+Heart rate is applied as an **efficiency multiplier (1.00–1.20)**.
+
+```
+Base Score = Distance + Pace + Elevation
+Final Score = Base Score × BPM Multiplier
+```
+
+---
+
+## 📊 Visualization
+
+The script generates a **stacked bar chart** showing:
+
+- Distance contribution  
+- Pace contribution  
+- Elevation contribution  
+- BPM bonus  
+
+Each bar represents **average performance per runner**.
+
+This allows you to:
+
+- Compare runners  
+- Understand performance strengths  
+- See score contribution breakdown  
+
+---
+
+## ⚙️ Script Workflow
+
+1. Load CSV data  
+2. Convert time to pace  
+3. Normalize performance metrics  
+4. Apply BPM multiplier  
+5. Calculate session scores  
+6. Group data by runner  
+7. Build stacked bar chart  
+8. Customize chart  
+9. Save visualization  
 
 ---
 
 ## 📈 Output
 
-✅ The script displays a **stacked bar chart** where:
+The script generates:
 
-- Each bar represents one runner  
-- The total bar height represents average performance score  
-- Each colored section shows the contribution of one score component  
+```
+runner_performance.png
+```
 
-This makes it easier to compare runners and understand what influenced their final score.
+The image contains a stacked bar chart comparing runner performance.
 
 ---
 
 ## 🛠 Requirements
 
-You will need:
-
 - Python 3.10+
 - pandas
 - matplotlib
-- A valid `data.csv` file
+
+Install dependencies:
+
+```bash
+pip install pandas matplotlib
+```
 
 ---
 
-## 🎓 Assignment Requirements Covered
+## 🎯 Project Goal
 
-This project includes:
+This project demonstrates:
 
-- ✅ File reading  
-- ✅ Data processing  
-- ✅ Data aggregation  
-- ✅ Data visualization  
-- ✅ Use of `pandas` and `matplotlib`
+- Data processing with pandas  
+- Normalized scoring systems  
+- Data visualization with matplotlib  
+- Performance analytics  
+- Stacked bar chart visualization
