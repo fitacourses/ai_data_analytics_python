@@ -62,22 +62,22 @@ BPM_MULT_MIN = 1.00
 BPM_MULT_MAX = 1.20
 
 # normalize all values to a 0-1 score based on defined min/max ranges
-# longer distances gets higher scores
+# longer distances get higher scores
 df["distance_score"] = (
     (df["distance"] - DIST_MIN) / (DIST_MAX - DIST_MIN)
 ).clip(0, 1)
 
-# lower pace gets higher scores
+# lower pace get higher scores
 df["pace_score"] = (
     (PACE_SLOW - df["pace"]) / (PACE_SLOW - PACE_FAST)
 ).clip(0, 1)
 
-# higher elevation gets higher scores
+# higher elevation get higher scores
 df["elevation_score"] = (
     (df["elevation"] - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)
 ).clip(0, 1)
 
-# lower bpm gets higher scores
+# lower bpm get higher scores
 df["bpm_score"] = (
     (BPM_HIGH - df["bpm"]) / (BPM_HIGH - BPM_LOW)
 ).clip(0, 1)
@@ -128,7 +128,7 @@ for day in df["day"].unique():
     daily_scores = day_df.groupby("runner")["perf_score"].mean()
     # sort runners from highest to lowest score
     daily_leaderboard = daily_scores.sort_values(ascending=False)
-        # store this day's leaderboard in the dictionary
+    # store this day's leaderboard in the dictionary
     daily_leaderboards[day] = daily_leaderboard
 # endregion
 
