@@ -1,14 +1,11 @@
-# region 1. TODO-DONE: Import libraries
+# region 1. Import libraries and load data
 import pandas as pd
 import matplotlib.pyplot as plt
-# endregion
-
-# region 2. TODO-DONE: Load data
 # read the CSV file into a pandas 
 df = pd.read_csv("data.csv") 
 # endregion
 
-# region 3. TODO-DONE: Convert time to decimal pace
+# region 2. Pace calculations
 # split the time column into minutes and seconds separately
 parts = df["time"].str.split(":")
 
@@ -18,25 +15,68 @@ df["pace"] = (minutes_total/ df["distance"]).round(2)
 # debug - print(df[["time", "distance", "pace"]].head())
 # endregion
 
-# region 4. TODO-DONE: Calculate session score components
-df["distance_score"] = df["distance"] * 0.17 # distance rewards longer runs
-df["pace_score"] = (10.00 - df["pace"]) * 0.6 # pace rewards faster sessions
-df["elevation_score"] = (df["elevation"] / 1000) * 8 # pace rewards faster sessions
-df["bpm_score"] = (200 - df["bpm"]) * 0.04 # elevation rewards more climbing
-# endregion
+# region 3. Performance scoring
+DIST_MIN = 0
+DIST_MAX = 30
 
-# region 5. TODO-DONE: Calculate total performance score per session
-df["perf_score_session"] = df["distance_score"] + df["pace_score"] + df["elevation_score"] + df["bpm_score"]
-# endregion
+PACE_SLOW = 8.0
+PACE_FAST = 3.5
 
-# region 6. TODO-DONE: Group data by runner
+ELEV_MIN = 50
+ELEV_MAX = 500
+
+BPM_LOW = 130
+BPM_HIGH = 160
+
+BPM_MULT_MIN = 1.00
+BPM_MULT_MAX = 1.20
+
+# normalize all values to a 0-1 score based on defined min/max ranges
+# longer distances get higher scores
+df["distance_score"] = (
+    (df["distance"] - DIST_MIN) / (DIST_MAX - DIST_MIN)
+).clip(0, 1)
+
+# lower pace get higher scores
+df["pace_score"] = (
+    (PACE_SLOW - df["pace"]) / (PACE_SLOW - PACE_FAST)
+).clip(0, 1)
+
+# higher elevation get higher scores
+df["elevation_score"] = (
+    (df["elevation"] - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)
+).clip(0, 1)
+
+# lower bpm get higher scores
+df["bpm_score"] = (
+    (BPM_HIGH - df["bpm"]) / (BPM_HIGH - BPM_LOW)
+).clip(0, 1)
+
+# convert normalized bpm scores (0-1) into multiplier
+# higher bpm score gives larger multiplier bonus
+df["bpm_multiplier"] = (
+    BPM_MULT_MIN + df["bpm_score"] * (BPM_MULT_MAX - BPM_MULT_MIN)
+)
+# combine main score components into one base score
+df["base_score"] = (
+    df["distance_score"] +
+    df["pace_score"] +
+    df["elevation_score"]
+)
+
+# apply bpm multiplier to get final performance score
+df["perf_score"] = df["base_score"] * df["bpm_multiplier"]
+
+# calculate how much extra score bpm added
+df["bpm_bonus"] = df["perf_score"] - df["base_score"]
+
 # group by runner and calculate average for each score
 grouped = df.groupby("runner")
-avg_perf_score = grouped[["distance_score", "pace_score", "elevation_score", "bpm_score"]].mean()
+avg_perf_score = grouped[["distance_score", "pace_score", "elevation_score", "bpm_bonus"]].mean()
 avg_perf_score = avg_perf_score.round(2)
 # endregion
 
-# region 7. TODO-DONE: Build stacked bar chart
+# region 4. Build stacked bar chart
 # create figure and axes and save into fig and ax
 fig, ax = plt.subplots()
 
@@ -46,16 +86,14 @@ avg_perf_score.plot(
     stacked=True,
     # store the plot in ax, to customize later
     ax=ax)
-# endregion
 
-# region 8. TODO-DONE: Customize
 # set title and axis name
 ax.set_title("Runner Performance Comparison")
 ax.set_xlabel("Runner")
 ax.set_ylabel("Average Performance Score")
 
 # rename columns for cleaner legend names
-ax.legend(["Distance", "Pace", "Elevation", "Heart Rate"])
+ax.legend(["Distance", "Pace", "Elevation", "BPM Bonus"])
 
 # "x" axe labels/numbers rotation
 ax.tick_params(axis="x", rotation=45)
@@ -64,7 +102,7 @@ ax.grid(axis="y", linestyle="--", alpha=0.6)
 plt.tight_layout()
 # endregion
 
-# region 9. TODO-DONE: Show result
+# region 5. Show result
 # debug - print(avg_perf_score)
 plt.savefig("runner_performance.png")
 # endregion
