@@ -13,7 +13,9 @@ df = pd.read_csv("data.csv")
 parts = df["time"].str.split(":")
 
 # convert the MM:SS time values into decimal minutes
-df["pace"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
+minutes_total = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
+df["pace"] = minutes_total/ df["distance"].round(2)
+print(df[["time", "distance", "pace"]].head())
 # endregion
 
 # region 4. TODO-DONE: Calculate session score components
@@ -31,6 +33,7 @@ df["perf_score_session"] = df["distance_score"] + df["pace_score"] + df["elevati
 # group by runner and calculate average for each score
 grouped = df.groupby("runner")
 avg_perf_score = grouped[["distance_score", "pace_score", "elevation_score", "bpm_score"]].mean()
+avg_perf_score = avg_perf_score.round(2)
 # endregion
 
 # region 7. TODO-DONE: Build stacked bar chart
@@ -52,6 +55,7 @@ ax.set_ylabel("Average Performance Score")
 
 # "x" axe labels/numbers rotation
 ax.tick_params(axis="x", rotation=45)
+ax.grid(axis="y", linestyle="--", alpha=0.5)
 # adjust spacing, so it fits in figure
 plt.tight_layout()
 # endregion
