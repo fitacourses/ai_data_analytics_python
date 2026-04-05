@@ -1,5 +1,6 @@
 *.code-workspace
-*.xlsx
+results.xlsx
+journal.xlsx
 
 # Python
 __pycache__/
