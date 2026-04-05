@@ -87,17 +87,27 @@ avg_perf_score.plot(
     # store the plot in ax, to customize later
     ax=ax)
 
+# add labels inside stacked bars
+for container in ax.containers:
+    ax.bar_label(container, fmt="%.2f", label_type="center", fontsize=7)
+
 # set title and axis name
 ax.set_title("Runner Performance Comparison")
 ax.set_xlabel("Runner")
 ax.set_ylabel("Average Performance Score")
 
-# rename columns for cleaner legend names
-ax.legend(["Distance", "Pace", "Elevation", "BPM Bonus"])
+# rename and reposition legend
+ax.legend(
+    ["Distance", "Pace", "Elevation", "BPM Bonus"],
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.25),
+    ncol=4
+)
 
 # "x" axe labels/numbers rotation
 ax.tick_params(axis="x", rotation=45)
 ax.grid(axis="y", linestyle="--", alpha=0.6)
+
 # adjust spacing, so it fits in figure
 plt.tight_layout()
 # endregion
