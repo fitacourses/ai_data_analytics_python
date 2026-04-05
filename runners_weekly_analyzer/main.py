@@ -28,29 +28,31 @@ stats = grouped[["distance", "elevation", "bpm"]].agg({
 })
 # endregion
 
-# region 3.1. TODO-DONE: Warnings
+# region 4. TODO-DONE: Warnings
 # add warning column, fill each runner's row with their warning message
 stats["warning"] = ""
 for runner in stats.index:
     stats.loc[runner, "warning"] = warnings[runner]
 # endregion
 
-# region 4. TODO-DONE: Average pace  
+# region 5. TODO-DONE: Average pace  
 # split time column into minutes and seconds separately
-parts = df["time"].str.split(":") 
+parts = df["time"].str.split(":")
 
 # convert the MM:SS time values into decimal minutes
-df["pace"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
+df["minutes_total"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
 
-# calculate each runner's average pace by dividing total time by total distance
-total_time = df.groupby("runner")["pace"].sum()
+# pace per session
+df["pace"] = df["minutes_total"] / df["distance"]
+
+# calculate each runner's average pace
+total_time = df.groupby("runner")["minutes_total"].sum()
 total_dist = df.groupby("runner")["distance"].sum()
+
 avg_pace = total_time / total_dist
 stats["avg_pace"] = avg_pace
-# endregion
 
-# region 4.1. TODO-DONE: Average pace conversion
-# allow the avg_pace column to store strings like MM:SS
+# average pace conversion - allow the avg_pace column to store strings like MM:SS
 stats["avg_pace"] = stats["avg_pace"].astype("object")
 
 for runner in stats.index:
@@ -65,33 +67,76 @@ for runner in stats.index:
 
     # format the result as MM:SS
     stats.loc[runner, "avg_pace"] = f"{minutes}:{seconds:02d}"
-# endregion
-
-# region 5. TODO-DONE: Performance score
-# calculate performance score in new column for each session
-# calculate separate score parts for each session
-distance_score = df["distance"] * 0.25          # more distance increases score
-pace_score = (1 / df["pace"]) * 10 * 1.2        # faster pace increases score
-elevation_score = (df["elevation"] / 100) * 0.5 # more elevation increases score
-bpm_penalty = (df["bpm"] / 200) * 0.2           # higher heart rate lowers score
-
-# combine all parts into one performance score
-df["perf_score"] = distance_score + pace_score + elevation_score - bpm_penalty
 
 # endregion
 
-# region 5.1. TODO-DONE: Average performance score
-# calculate each runner's average performance score across all sessions
-stats["avg_perf_score"] = df.groupby("runner")["perf_score"].mean()
+# region 6. TODO-DONE: Scoring ranges
+DIST_MIN = 0
+DIST_MAX = 30
+
+PACE_SLOW = 8.0
+PACE_FAST = 3.5
+
+ELEV_MIN = 50
+ELEV_MAX = 500
+
+BPM_LOW = 115
+BPM_HIGH = 180
+
+BPM_MULT_MIN = 1.00
+BPM_MULT_MAX = 1.15
 # endregion
 
-# region 6. TODO-DONE: Consistency
+# region 7. TODO-DONE: Average performance score
+# normalize all values to a 0-1 score based on defined min/max ranges
+
+# longer distances gets higher scores
+df["distance_score"] = (
+    (df["distance"] - DIST_MIN) / (DIST_MAX - DIST_MIN)
+).clip(0, 1)
+
+# lower pace gets higher score
+df["pace_score"] = (
+    (PACE_SLOW - df["pace"]) / (PACE_SLOW - PACE_FAST)
+).clip(0, 1)
+
+# higher elevation gets higher scores
+df["elevation_score"] = (
+    (df["elevation"] - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)
+).clip(0, 1)
+
+# lower bpm gets higher scores
+df["bpm_score"] = (
+    (BPM_HIGH - df["bpm"]) / (BPM_HIGH - BPM_LOW)
+).clip(0, 1)
+
+# convert normalized bpm score (0-1) into multiplier (1.00-1.15)
+# higher bpm score gives larger multiplier bonus
+df["bpm_multiplier"] = (
+    BPM_MULT_MIN + df["bpm_score"] * (BPM_MULT_MAX - BPM_MULT_MIN)
+)
+
+# base score from main performance components
+df["base_score"] = (
+    df["distance_score"] +
+    df["pace_score"] +
+    df["elevation_score"]
+)
+
+# apply bpm multiplier to get final performance score
+df["perf_score"] = df["base_score"] * df["bpm_multiplier"]
+
+# calculate how much bpm contributed as a bonus
+df["bpm_bonus"] = df["perf_score"] - df["base_score"]
+# endregion
+
+# region 8. TODO-DONE: Consistency
 # calculate the standard deviation of each runner's performance scores
 # a lower value means the runner was more consistent
 stats["consistency"] = df.groupby("runner")["perf_score"].std()
 # endregion
 
-# region 7. TODO-DONE: Power ranking
+# region 9. TODO-DONE: Power ranking
 # create the final power ranking score
 # average performance has a bigger weight, while consistency also helps
 performance_weight = stats["avg_perf_score"] * 0.7
@@ -100,7 +145,7 @@ stats["power_ranking"] = performance_weight + consistency_weight
 
 # endregion
 
-# region 8. TODO-DONE: Leaderboard
+# region 10. TODO-DONE: Leaderboard
 # sort runners by power ranking from highest to lowest
 weekly_leaderboard = stats[["avg_perf_score", "consistency", "power_ranking"]].sort_values("power_ranking", ascending=False)
 
@@ -118,7 +163,7 @@ for day in df["day"].unique():
     daily_leaderboards[day] = daily_leaderboard
 # endregion
 
-# region 9. TODO-DONE: Rounding numbers
+# region 11. TODO-DONE: Rounding numbers
 # round numeric values in stats table
 stats = stats.round(2)
 
@@ -133,7 +178,7 @@ for day in daily_leaderboards:
     daily_leaderboards[day] = daily_leaderboards[day].round(2)
 # endregion
 
-# region 10. TODO-DONE: Export
+# region 12. TODO-DONE: Export
 # write all tables to results.xlsx, each on its own sheet
 with pd.ExcelWriter("results.xlsx") as writer:
     stats.to_excel(writer, sheet_name="Weekly Stats")
@@ -142,5 +187,4 @@ with pd.ExcelWriter("results.xlsx") as writer:
     # write each daily leaderboard to its own sheet
     for day, table in daily_leaderboards.items():
         table.to_excel(writer, sheet_name=str(day))
-# endregion
 # endregion
