@@ -2,6 +2,7 @@
 journal.xlsx
 */journal.xlsx
 results.xlsx
+events.csv
 
 # Python
 __pycache__/
