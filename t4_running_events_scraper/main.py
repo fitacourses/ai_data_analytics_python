@@ -36,7 +36,7 @@ soup = BeautifulSoup(html, "html.parser")
 text = soup.get_text("\n")
 # endregion
 
-# region 5. Find event lines 
+# region 5. Find event lines
 # This pattern searches for: dd.mm.yyyy + text after it
 matches = re.findall(r"(\d{2}\.\d{2}\.\d{4})\s+(.*)", text)
 # example match: 09.05.2026 Ritma skrējiens 2026 Liepāja, gets stored as
@@ -50,4 +50,21 @@ for date, line in matches:
     if "skrēj" in text or "skrieš" in text or "maraton" in text or "run" in text:
         rows.append([date, line])
 print(rows)
+# endregion
+
+# region 6. Save the filtered rows to CSV
+# temporarily (with) open or create events.csv 
+# write/overwrite (w) file
+# prevents blank lines (newline="")
+# handles special latvian characters (encoding="utf-8")
+# write in new variable file (as file)
+with open("events.csv", "w", newline="", encoding="utf-8") as file:
+    # creates CSV writer object and say where to write
+    writer = csv.writer(file)
+    # write one (header) row
+    writer.writerow(["date", "event"])
+    # write multiple rows from filtered list
+    writer.writerows(rows)
+
+print(f"Saved {len(rows)} events to events.csv")
 # endregion
