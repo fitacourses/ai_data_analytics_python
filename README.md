@@ -27,7 +27,7 @@ Each project folder represents one of the four course assignments — grouped in
 
 This repository contains **4 assignments**, one for each module of the course.
 
-### 📝 Assignment 1 — KPI Product Margin Calculator
+### 📝 Task 1 (t1_margin_calculator) — KPI Product Margin Calculator
 
 > *Syntax & Logic — Python fundamentals with conditions, loops, and dictionaries.*
 
@@ -35,7 +35,7 @@ A terminal-based script that calculates business KPIs — revenue, costs, profit
 
 ---
 
-### 📊 Assignment 2 — KPI File Reader: Runners Weekly Analyzer
+### 📊 Task 2 (t2_runner_analysis)— KPI File Reader: Runners Weekly Analyzer
 
 > *Data Processing — CSV files, pandas, and openpyxl.*
 
@@ -43,7 +43,7 @@ A script that reads weekly running training data from a CSV file and calculates 
 
 ---
 
-### 📈 Assignment 3 — Runner KPI Visualization
+### 📈 Task 3 (t3_runner_visualization) — Runner KPI Visualization
 
 > *Visualization — pandas and matplotlib.*
 
@@ -51,11 +51,13 @@ A Python script that reads running session data from a CSV file and visualizes r
 
 ---
 
-### 🌐 Assignment 4 — Web Scraping
+### 🌐 Task 4 (t4_running_events_scraper) — Web Scraping
 
 > *Web data collection — requests, BeautifulSoup, and HTML parsing.*
 
-A Python script that collects data from web sources automatically and turns it into a structured dataset for analysis. This assignment focuses on retrieving information from online pages, extracting the needed values, and preparing them for further processing.
+A Python script that automatically collects running event data from sportlat.lv and converts it into a structured dataset for analysis. The script retrieves event information such as names, dates, and locations, then saves the extracted data into a CSV file for further processing and visualization.
+
+This project demonstrates automated data collection from web pages and prepares real-world running event data for future analysis.
 
 ---
 
