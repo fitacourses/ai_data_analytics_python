@@ -9,12 +9,23 @@ st.title("AI Running Performance Analyzer")
 st.caption("Upload your Garmin data to explore trends, records, and training insights.")
 
 # ===== Data Input =====
-uploaded_file = st.file_uploader("Upload Garmin CSV file", type=["csv"])
+uploaded_files = st.file_uploader(
+    "Upload Garmin CSV files",
+    type=["csv"],
+    accept_multiple_files=True
+)
 
 df = None
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+if uploaded_files:
+    # Read each uploaded CSV separately, then combine them into one dataframe
+    dataframes = []
+
+    for file in uploaded_files:
+        current_df = pd.read_csv(file)
+        dataframes.append(current_df)
+
+    df = pd.concat(dataframes, ignore_index=True)
 
 # ===== Tabs =====
 tab_overview, tab_trends, tab_records, tab_insights = st.tabs(
@@ -27,31 +38,34 @@ with tab_overview:
     if df is not None:
         st.write("Data loaded successfully.")
 
+        # Remove columns that are technical, duplicated, or not useful for the current analysis
         df = df.drop(
-    columns=[
-        "Unnamed: 0",
-        "Soļu veids",
-        "Intervāls",
-        "Kumulatīvais laiks",
-        "Distance"
-    ]
-)
-        
+            columns=[
+                "Unnamed: 0",
+                "Soļu veids",
+                "Intervāls",
+                "Kumulatīvais laiks",
+                "Distance"
+            ]
+        )
+
+        # Rename key columns to consistent English snake_case names
+        # so the rest of the code is easier to read and maintain
         df = df.rename(
-    columns={
-        "Attālums": "distance_km",
-        "Laiks": "duration",
-        "Vid. temps": "avg_pace",
-        "Vid. SR": "avg_cadence",
-        "Maks. SR": "max_cadence",
-        "Kopējais kāpums": "elevation_gain",
-        "Kopējais kritums": "elevation_loss",
-        "Kalorijas": "calories",
-        "Labākais temps": "best_pace",
-        "Kustības laiks": "moving_time",
-        "Vid. kustības temps": "avg_moving_pace",
-    }
-)
+            columns={
+                "Attālums": "distance_km",
+                "Laiks": "duration",
+                "Vid. temps": "avg_pace",
+                "Vid. SR": "avg_cadence",
+                "Maks. SR": "max_cadence",
+                "Kopējais kāpums": "elevation_gain",
+                "Kopējais kritums": "elevation_loss",
+                "Kalorijas": "calories",
+                "Labākais temps": "best_pace",
+                "Kustības laiks": "moving_time",
+                "Vid. kustības temps": "avg_moving_pace",
+            }
+        )
 
         st.dataframe(df.head())
         st.write(df.columns)
