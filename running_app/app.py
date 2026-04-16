@@ -42,8 +42,11 @@ with tab_overview:
     if df is not None:
         st.write("Data loaded successfully.")
 
+        # Create a clean copy of raw data for processing
+        clean_df = df.copy()
+
         # Remove columns that are technical, duplicated, or not useful for the current analysis
-        df = df.drop(
+        clean_df = clean_df.drop(
             columns=[
                 "Unnamed: 0",
                 "Soļu veids",
@@ -55,7 +58,7 @@ with tab_overview:
 
         # Rename key columns to consistent English snake_case names
         # so the rest of the code is easier to read and maintain
-        df = df.rename(
+        clean_df = clean_df.rename(
             columns={
                 "Attālums": "distance_km",
                 "Laiks": "duration",
@@ -71,8 +74,8 @@ with tab_overview:
             }
         )
 
-        st.dataframe(df.head())
-        st.write(df.columns)
+        st.dataframe(clean_df.head())
+        st.write(clean_df.columns)
 
 with tab_trends:
     st.subheader("Trends")
