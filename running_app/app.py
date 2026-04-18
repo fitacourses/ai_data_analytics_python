@@ -237,6 +237,7 @@ with tab_trends:
             # pace over time
             daily_pace_df = get_daily_pace_df(pace_df)
             daily_pace_df = daily_pace_df.sort_values("activity_date")
+            daily_pace_df["daily_pace_3d"] = daily_pace_df["daily_pace_min"].rolling(3, min_periods=1).mean()
 
             # convert float minutes → MM:SS string
             minutes = daily_pace_df["daily_pace_min"].astype(int)
@@ -246,8 +247,9 @@ with tab_trends:
             if not daily_pace_df.empty:
                 st.subheader("Pace Over Time")
                 st.line_chart(
-                    daily_pace_df.set_index("activity_date")["daily_pace_min"]
+                    daily_pace_df.set_index("activity_date")["daily_pace_3d"]
                 )
+
 
         # show time-based charts only if activity_date exists
         if "activity_date" in clean_df.columns:
@@ -277,9 +279,7 @@ with tab_trends:
 
             # plot weekly distance trend
             st.line_chart(weekly_distance)
-            st.dataframe(
-                daily_pace_df[["activity_date", "daily_pace_min", "pace_str"]]
-            )
+            # st.dataframe(daily_pace_df[["activity_date", "daily_pace_min", "pace_str"]])
             st.dataframe(daily_pace_df)
 
 # endregion
