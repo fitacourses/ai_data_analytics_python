@@ -83,38 +83,56 @@ if df is not None:
 
 # endregion
 
+# region Helpers
+
+def get_pace_df(clean_df):
+    """
+    Returns a dataframe with valid pace rows and numeric pace_min column.
+    Does not modify the original clean_df.
+    """
+    # create a copy to avoid mutating original dataframe
+    pace_df = clean_df.dropna(subset=["avg_pace"]).copy()
+
+    # keep only rows with valid "MM:SS" format
+    pace_df = pace_df[pace_df["avg_pace"].str.contains(":")]
+
+    # split pace string into minutes and seconds
+    parts = pace_df["avg_pace"].str.split(":")
+
+    # convert pace to numeric minutes
+    pace_df["pace_min"] = (
+        parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
+    )
+
+    return pace_df
+
+# endregion
+
 # region KPIs
 
-# KPI default values in case no data is loaded
+# KPI default values if no data is loaded
 total_distance = None
 avg_pace = None
 weighted_avg_pace = None
 
 if clean_df is not None:
-    # calculate total distance from the full cleaned dataset
+    # calculate total distance from full dataset
     total_distance = clean_df["distance_km"].sum()
 
-    # create a separate dataframe for pace calculations so clean_df stays unchanged
-    pace_df = clean_df.dropna(subset=["avg_pace"]).copy()
+    # reuse preprocessing logic
+    pace_df = get_pace_df(clean_df)
 
-    # keep only rows where pace has a valid "MM:SS" format
-    pace_df = pace_df[pace_df["avg_pace"].str.contains(":")]
-
-    # split pace text into minutes and seconds
-    parts = pace_df["avg_pace"].str.split(":")
-
-    # convert pace from "MM:SS" into total minutes as a number
-    pace_df["pace_min"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
-
-    # calculate the mean pace from numeric pace values
+    # simple average pace
     avg_pace = pace_df["pace_min"].mean()
 
-    # multiply each pace by its distance to create a weighted contribution
+    # create weighted pace contribution
     pace_df["weighted_pace"] = pace_df["pace_min"] * pace_df["distance_km"]
 
-    # calculate weighted average pace only if total distance is greater than 0
+    # calculate weighted average pace safely
     if pace_df["distance_km"].sum() > 0:
-        weighted_avg_pace = pace_df["weighted_pace"].sum() / pace_df["distance_km"].sum()
+        weighted_avg_pace = (
+            pace_df["weighted_pace"].sum() / pace_df["distance_km"].sum()
+        )
 
 # endregion
 
@@ -157,6 +175,17 @@ with tab_overview:
 
 with tab_trends:
     st.subheader("Trends")
+
+    if clean_df is not None:
+        # reuse the same preprocessing function
+        pace_df = get_pace_df(clean_df)
+
+        st.subheader("Pace Distribution")
+
+        # simple histogram using value counts
+        st.bar_chart(
+            pace_df["pace_min"].value_counts().sort_index()
+        )
 
 # endregion
 
