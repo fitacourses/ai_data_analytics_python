@@ -61,8 +61,12 @@ if df is not None:
             "Intervāls",
             "Kumulatīvais laiks",
             "Distance",
-        ]
+        ],
+        # ignore not existing columns
+        errors="ignore",
     )
+    # show available columns for debugging
+    st.write(clean_df.columns)
 
     # rename key columns to consistent English snake_case names
     clean_df = clean_df.rename(
@@ -78,8 +82,14 @@ if df is not None:
             "Labākais temps": "best_pace",
             "Kustības laiks": "moving_time",
             "Vid. kustības temps": "avg_moving_pace",
+            "Datums": "activity_date"
         }
     )
+    # convert activity_date to datetime for time-based analysis
+    clean_df["activity_date"] = pd.to_datetime(clean_df["activity_date"])
+
+    # normalize datetime so runs from the same day can be grouped together
+    clean_df["activity_date"] = clean_df["activity_date"].dt.normalize()
 
 # endregion
 
@@ -87,7 +97,7 @@ if df is not None:
 
 def get_pace_df(clean_df):
     """
-    Returns a dataframe with valid pace rows and numeric pace_min column.
+    Returns a dataframe with valid pace rows and numeric pace_min column
     Does not modify the original clean_df.
     """
     # create a copy to avoid mutating original dataframe
@@ -162,7 +172,15 @@ with tab_overview:
                 st.metric("Weighted Average Pace (min/km)", weighted_pace_str)
 
         n_rows = st.slider("Rows to display", 5, 100, 20)
-        st.dataframe(clean_df.head(n_rows))
+        
+        # create a copy for display so original data stays unchanged
+        display_df = clean_df.copy()
+
+        # format datetime column to show only date (no time)
+        display_df["activity_date"] = display_df["activity_date"].dt.strftime("%Y-%m-%d")
+
+        # show formatted table
+        st.dataframe(display_df.head(n_rows))
 
         # st.write(clean_df.columns)
         # st.write(clean_df["avg_pace"].isna().sum())
@@ -201,6 +219,21 @@ with tab_trends:
             # set pace_range as index so it becomes the X-axis in the chart
             st.bar_chart(hist_df.set_index("pace_range"))
 
+    if clean_df is not None and "activity_date" in clean_df.columns:
+        st.subheader("Distance Over Time")
+
+        # create a daily distance summary
+        daily_distance = (
+            clean_df.groupby("activity_date", as_index=False)["distance_km"].sum()
+        )
+
+        # sort by date for a correct timeline
+        daily_distance = daily_distance.sort_values("activity_date")
+
+        # use activity_date as index for the chart
+        st.line_chart(
+            daily_distance.set_index("activity_date")["distance_km"]
+        )
 # endregion
 
 # region Records Tab
