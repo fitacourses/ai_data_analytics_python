@@ -174,18 +174,18 @@ with tab_overview:
             st.metric("Total Distance (km)", f"{total_distance:.2f}")
 
         if avg_pace is not None:
-                minutes = int(avg_pace)
-                seconds = int(round((avg_pace - minutes) * 60))
-                pace_str = f"{minutes}:{seconds:02d}"
-                st.metric("Average Pace (min/km)", pace_str)
+            minutes = int(avg_pace)
+            seconds = int(round((avg_pace - minutes) * 60))
+            pace_str = f"{minutes}:{seconds:02d}"
+            st.metric("Average Pace (min/km)", pace_str)
 
         if weighted_avg_pace is not None:
-                # convert weighted average pace back from decimal minutes to "MM:SS"
-                weighted_minutes = int(weighted_avg_pace)
-                weighted_seconds = int(round((weighted_avg_pace - weighted_minutes) * 60))
-                weighted_pace_str = f"{weighted_minutes}:{weighted_seconds:02d}"
+            # convert weighted average pace back from decimal minutes to "MM:SS"
+            weighted_minutes = int(weighted_avg_pace)
+            weighted_seconds = int(round((weighted_avg_pace - weighted_minutes) * 60))
+            weighted_pace_str = f"{weighted_minutes}:{weighted_seconds:02d}"
 
-                st.metric("Weighted Average Pace (min/km)", weighted_pace_str)
+            st.metric("Weighted Average Pace (min/km)", weighted_pace_str)
 
         n_rows = st.slider("Rows to display", 5, 100, 20)
 
@@ -196,8 +196,7 @@ with tab_overview:
         display_df["activity_date"] = display_df["activity_date"].dt.strftime("%Y-%m-%d")
 
         # show formatted table
-        st.dataframe(display_df.head(n_rows))
-
+        # st.dataframe(display_df.head(n_rows))
         # st.write(clean_df.columns)
         # st.write(clean_df["avg_pace"].isna().sum())
         # st.write(clean_df[clean_df["avg_pace"].isna()])
@@ -234,6 +233,16 @@ with tab_trends:
 
             # set pace_range as index so it becomes the X-axis in the chart
             st.bar_chart(hist_df.set_index("pace_range"))
+        
+            # pace over time
+            daily_pace_df = get_daily_pace_df(pace_df)
+            daily_pace_df = daily_pace_df.sort_values("activity_date")
+
+            if not daily_pace_df.empty:
+                st.subheader("Pace Over Time")
+                st.line_chart(
+                    daily_pace_df.set_index("activity_date")["daily_pace_min"]
+                )
 
         # show time-based charts only if activity_date exists
         if "activity_date" in clean_df.columns:
