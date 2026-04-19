@@ -189,6 +189,10 @@ with tab_overview:
     if clean_df is not None:
         st.write("Data loaded successfully.")
 
+        if "calories" in clean_df.columns:
+            total_calories = clean_df["calories"].sum()
+            st.metric("Total Calories", int(total_calories))
+
         if total_distance is not None:
             st.metric("Total Distance (km)", f"{total_distance:.2f}")
 
@@ -216,8 +220,13 @@ with tab_overview:
                 "%Y-%m-%d"
             )
 
-            st.dataframe(display_df.head(n_rows))
-
+            columns_to_show = [
+                "activity_date",
+                "distance_km",
+                "avg_pace",
+                "calories",
+            ]
+            st.dataframe(display_df[columns_to_show].head(n_rows))
 # endregion
 
 # region Trends Tab
@@ -320,6 +329,16 @@ with tab_trends:
                     .resample("W")["distance_km"]
                     .sum()
                 )
+
+                st.subheader("Calories Over Time")
+
+                daily_calories = clean_df.groupby("activity_date", as_index=False)[
+                    "calories"
+                ].sum()
+
+                daily_calories = daily_calories.sort_values("activity_date")
+
+                st.line_chart(daily_calories.set_index("activity_date")["calories"])
 
                 # plot weekly total distance to show training volume trend
                 st.line_chart(weekly_distance)
