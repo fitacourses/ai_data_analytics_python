@@ -195,6 +195,7 @@ with tab_overview:
         # format datetime column to show only date (no time)
         display_df["activity_date"] = display_df["activity_date"].dt.strftime("%Y-%m-%d")
 
+
         # show formatted table
         # st.dataframe(display_df.head(n_rows))
         # st.write(clean_df.columns)
@@ -237,8 +238,8 @@ with tab_trends:
             # pace over time
             daily_pace_df = get_daily_pace_df(pace_df)
             daily_pace_df = daily_pace_df.sort_values("activity_date")
-            daily_pace_df["daily_pace_3d"] = daily_pace_df["daily_pace_min"].rolling(3, min_periods=1).mean()
-
+            daily_pace_df["pace_smooth"] = (daily_pace_df["daily_pace_min"].rolling(window=5, min_periods=1).mean())
+            
             # convert float minutes → MM:SS string
             minutes = daily_pace_df["daily_pace_min"].astype(int)
             seconds = ((daily_pace_df["daily_pace_min"] - minutes) * 60).round().astype(int)
@@ -247,7 +248,7 @@ with tab_trends:
             if not daily_pace_df.empty:
                 st.subheader("Pace Over Time")
                 st.line_chart(
-                    daily_pace_df.set_index("activity_date")["daily_pace_3d"]
+                    daily_pace_df.set_index("activity_date")["pace_smooth"]
                 )
 
 
@@ -281,6 +282,8 @@ with tab_trends:
             st.line_chart(weekly_distance)
             # st.dataframe(daily_pace_df[["activity_date", "daily_pace_min", "pace_str"]])
             st.dataframe(daily_pace_df)
+
+            st.dataframe(daily_pace_df[["activity_date", "daily_pace_min", "pace_smooth"]])
 
 # endregion
 
