@@ -159,6 +159,19 @@ def get_pace_df_with_types(clean_df):
     return pace_df
 
 
+def format_minutes_to_hhmmss(time_min):
+    total_seconds = int(round(time_min * 60))
+
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    else:
+        return f"{minutes}:{seconds:02d}"
+
+
 # endregion
 
 # region KPIs
@@ -346,8 +359,9 @@ with tab_trends:
 
 # default values for records
 longest_run = None
-best_pace = None
-fastest_run = None
+best_5k_time = None
+best_10k_time = None
+best_21k_time = None
 
 if clean_df is not None:
     # get the longest distance from the cleaned dataset
@@ -360,12 +374,21 @@ if clean_df is not None:
     pace_df = get_pace_df(clean_df)
 
     if not pace_df.empty:
-        # get the fastest pace (lowest pace_min value)
-        best_pace = pace_df["pace_min"].min()
+        # find runs long enough for each target distance
+        runs_5k = pace_df[pace_df["distance_km"] >= 5]
+        runs_10k = pace_df[pace_df["distance_km"] >= 10]
+        runs_21k = pace_df[pace_df["distance_km"] >= 21]
 
-        # get the full row of the fastest run
-        fastest_run = pace_df.loc[pace_df["pace_min"].idxmin()]
-# endregion
+        # estimate best target times from the fastest eligible run pace
+        if not runs_5k.empty:
+            best_5k_time = runs_5k["pace_min"].min() * 5
+
+        if not runs_10k.empty:
+            best_10k_time = runs_10k["pace_min"].min() * 10
+
+        if not runs_21k.empty:
+            best_21k_time = runs_21k["pace_min"].min() * 21
+        # endregion
 
 # region Records Tab
 
@@ -374,20 +397,17 @@ with tab_records:
 
     if clean_df is not None:
         if longest_run is not None:
-            # show the longest recorded run
             st.metric("Longest Run (km)", f"{longest_run:.2f}")
 
-        if best_pace is not None and fastest_run is not None:
-            # convert best pace from decimal minutes to MM:SS
-            best_minutes = int(best_pace)
-            best_seconds = int(round((best_pace - best_minutes) * 60))
-            best_pace_str = f"{best_minutes}:{best_seconds:02d}"
+        if best_5k_time is not None:
+            st.metric("Best 5K Time", format_minutes_to_hhmmss(best_5k_time))
 
-            st.metric("Best Pace (min/km)", best_pace_str)
-            st.write("Fastest run distance (km):", round(fastest_run["distance_km"], 2))
+        if best_10k_time is not None:
+            st.metric("Best 10K Time", format_minutes_to_hhmmss(best_10k_time))
 
-            run_date = fastest_run["activity_date"].strftime("%Y-%m-%d")
-            st.write("Date:", run_date)
+        if best_21k_time is not None:
+            st.metric("Best 21K Time", format_minutes_to_hhmmss(best_21k_time))
+
 
 # endregion
 
@@ -400,9 +420,25 @@ with tab_insights:
         pace_df = get_pace_df_with_types(clean_df)
 
         if not pace_df.empty:
-            most_common = pace_df["run_type"].value_counts().idxmax()
-            st.write("Most common run type:", most_common)
+            # --- METRICS ---
+            avg_distance = pace_df["distance_km"].mean()
 
+            runs_per_week = (
+                pace_df.set_index("activity_date")
+                .resample("W")["distance_km"]
+                .count()
+                .mean()
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.metric("Average distance per run", f"{avg_distance:.2f} km")
+
+            with col2:
+                st.metric("Average runs per week", f"{runs_per_week:.1f}")
+
+            # --- INSIGHTS ---
             daily_pace_df = get_daily_pace_df(pace_df)
 
             if not daily_pace_df.empty:
@@ -410,26 +446,16 @@ with tab_insights:
                 older = daily_pace_df.head(7)["daily_pace_min"].mean()
 
                 if recent < older:
-                    st.write("You are getting faster recently.")
+                    st.success("You are getting faster recently.")
                 else:
-                    st.write("Pace has slowed down recently.")
+                    st.warning("Pace has slowed down recently.")
 
-        avg_distance = pace_df["distance_km"].mean()
-        st.write("Average distance per run:", round(avg_distance, 2), "km")
+            corr = pace_df["distance_km"].corr(pace_df["pace_min"])
 
-        runs_per_week = (
-            pace_df.set_index("activity_date")
-            .resample("W")["distance_km"]
-            .count()
-            .mean()
-        )
-
-        st.write("Average runs per week:", round(runs_per_week, 1))
-
-        long_pace = pace_df[pace_df["run_type"] == "long"]["pace_min"].mean()
-        short_pace = pace_df[pace_df["run_type"] == "short"]["pace_min"].mean()
-
-        st.write("Avg short run pace:", round(short_pace, 2))
-        st.write("Avg long run pace:", round(long_pace, 2))
-
+            if corr > 0.2:
+                st.info("You tend to slow down as distance increases.")
+            elif corr < -0.2:
+                st.info("You maintain or improve pace on longer runs.")
+            else:
+                st.info("Your pace is relatively independent of distance.")
 # endregion
