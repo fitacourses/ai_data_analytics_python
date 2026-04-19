@@ -195,14 +195,6 @@ with tab_overview:
         # format datetime column to show only date (no time)
         display_df["activity_date"] = display_df["activity_date"].dt.strftime("%Y-%m-%d")
 
-
-        # show formatted table
-        # st.dataframe(display_df.head(n_rows))
-        # st.write(clean_df.columns)
-        # st.write(clean_df["avg_pace"].isna().sum())
-        # st.write(clean_df[clean_df["avg_pace"].isna()])
-        # st.write(clean_df["avg_pace"].dtype)
-
 # endregion
 
 # region Trends Tab
@@ -280,9 +272,6 @@ with tab_trends:
 
             # plot weekly distance trend
             st.line_chart(weekly_distance)
-            # st.dataframe(daily_pace_df[["activity_date", "daily_pace_min", "pace_str"]])
-            st.dataframe(daily_pace_df)
-
             st.dataframe(daily_pace_df[["activity_date", "daily_pace_min", "pace_smooth"]])
 
 # endregion
