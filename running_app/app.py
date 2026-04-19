@@ -327,6 +327,8 @@ with tab_trends:
                     .resample("W")["distance_km"]
                     .sum()
                 )
+                # plot weekly total distance to show training volume trend
+                st.line_chart(weekly_distance)
 
                 st.subheader("Calories Over Time")
 
@@ -411,4 +413,23 @@ with tab_insights:
                     st.write("You are getting faster recently.")
                 else:
                     st.write("Pace has slowed down recently.")
+
+        avg_distance = pace_df["distance_km"].mean()
+        st.write("Average distance per run:", round(avg_distance, 2), "km")
+
+        runs_per_week = (
+            pace_df.set_index("activity_date")
+            .resample("W")["distance_km"]
+            .count()
+            .mean()
+        )
+
+        st.write("Average runs per week:", round(runs_per_week, 1))
+
+        long_pace = pace_df[pace_df["run_type"] == "long"]["pace_min"].mean()
+        short_pace = pace_df[pace_df["run_type"] == "short"]["pace_min"].mean()
+
+        st.write("Avg short run pace:", round(short_pace, 2))
+        st.write("Avg long run pace:", round(long_pace, 2))
+
 # endregion
