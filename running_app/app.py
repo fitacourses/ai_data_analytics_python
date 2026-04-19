@@ -152,7 +152,7 @@ def get_pace_df_with_types(clean_df):
     pace_df["run_type"] = pd.cut(
         pace_df["distance_km"],
         bins=[0, 7, 13, float("inf")],
-        labels=["short", "medium", "long"],
+        labels=["short (<7 km)", "medium (7–13 km)", "long (>13 km)"],
         include_lowest=True,
     )
 
@@ -282,8 +282,17 @@ with tab_trends:
                 total_distance_km=("distance_km", "sum"),
             )
 
+            minutes = run_summary["avg_pace_min"].astype(int)
+            seconds = ((run_summary["avg_pace_min"] - minutes) * 60).round().astype(int)
+
+            run_summary["avg_pace"] = (
+                minutes.astype(str) + ":" + seconds.astype(str).str.zfill(2)
+            )
+
             st.subheader("Run Type Summary")
-            st.dataframe(run_summary)
+            st.dataframe(
+                run_summary[["run_type", "runs", "avg_pace", "total_distance_km"]]
+            )
 
             # aggregate session-level runs into one weighted pace value per day
             daily_pace_df = get_daily_pace_df(pace_df)
