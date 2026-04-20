@@ -227,7 +227,7 @@ with tab_overview:
         ]
         n_rows = st.slider("Rows to display", 5, 100, 20)
 
-        st.dataframe(display_df[columns_to_show].head(n_rows))
+        st.dataframe(display_df[columns_to_show].head(n_rows), hide_index=True)
 # endregion
 
 # region Trends Tab
