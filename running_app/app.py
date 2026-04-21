@@ -2,6 +2,8 @@
 
 import streamlit as st
 import pandas as pd
+import altair as alt
+import math
 
 # endregion
 
@@ -70,8 +72,8 @@ if df is not None:
             "Attālums": "distance_km",
             "Laiks": "duration",
             "Vid. temps": "avg_pace",
-            "Vid. SR": "avg_cadence",
-            "Maks. SR": "max_cadence",
+            "Vid. SR": "avg_heart_rate",
+            "Maks. SR": "max_heart_rate",
             "Kopējais kāpums": "elevation_gain",
             "Kopējais kritums": "elevation_loss",
             "Kalorijas": "calories",
@@ -150,6 +152,21 @@ def get_pace_df_with_types(clean_df):
     )
 
     return pace_df
+
+
+def get_effort_proxy_df(clean_df):
+    # return bpm + pace_min pairs for each run (one point per session)
+    if clean_df is None or "avg_heart_rate" not in clean_df.columns:
+        return pd.DataFrame(columns=["bpm", "pace_min"])
+
+    pace_df = get_pace_df(clean_df)
+
+    effort_df = pace_df.copy()
+    effort_df["bpm"] = pd.to_numeric(effort_df["avg_heart_rate"], errors="coerce")
+
+    effort_df = effort_df.dropna(subset=["bpm", "pace_min"])
+
+    return effort_df[["bpm", "pace_min"]]
 
 
 def format_minutes_to_hhmmss(time_min):
@@ -275,10 +292,89 @@ with tab_trends:
 
             if not daily_pace_df.empty:
                 st.subheader("Pace Over Time")
-                st.line_chart(daily_pace_df.set_index("activity_date")["pace_smooth"])
+                pace_over_time_chart = (
+                    alt.Chart(daily_pace_df)
+                    .mark_line()
+                    .encode(
+                        x=alt.X("activity_date:T", title="Date"),
+                        y=alt.Y("pace_smooth:Q", title="Pace (min/km)"),
+                        tooltip=[
+                            alt.Tooltip("activity_date:T", title="Date"),
+                            alt.Tooltip("pace_smooth:Q", title="Pace (min/km)", format=".2f"),
+                        ],
+                    )
+                    .properties(height=260)
+                )
+                st.altair_chart(pace_over_time_chart, use_container_width=True)
 
             st.subheader("Pace vs Distance")
-            st.scatter_chart(pace_df, x="distance_km", y="pace_min")
+            pace_vs_distance_chart = (
+                alt.Chart(pace_df)
+                .mark_circle(size=55, opacity=0.6)
+                .encode(
+                    x=alt.X("distance_km:Q", title="Distance (km)"),
+                    y=alt.Y("pace_min:Q", title="Pace (min/km)"),
+                    tooltip=[
+                        alt.Tooltip("distance_km:Q", title="Distance (km)", format=".2f"),
+                        alt.Tooltip("pace_min:Q", title="Pace (min/km)", format=".2f"),
+                    ],
+                )
+                .properties(height=260)
+            )
+            st.altair_chart(pace_vs_distance_chart, use_container_width=True)
+
+            st.subheader("Effort Proxy (Pace vs Heart Rate)")
+            effort_df = get_effort_proxy_df(clean_df)
+
+            if effort_df.empty:
+                st.info(
+                    "No valid heart rate data found. Upload an Activities CSV that includes average heart rate (e.g., 'Vid. SR')."
+                )
+            else:
+                st.caption(
+                    "Lower is better (faster pace). Left is easier (lower heart rate). Ideal trend: down-left over time."
+                )
+
+                bpm_max = float(effort_df["bpm"].max())
+                bpm_p95 = float(effort_df["bpm"].quantile(0.95))
+                bpm_upper = min(200.0, bpm_p95 + 15.0)
+                bpm_upper = max(bpm_upper, 130.0)
+                bpm_upper = max(bpm_upper, min(bpm_max, bpm_p95 + 5.0))
+                bpm_upper = math.ceil(bpm_upper / 5.0) * 5.0
+
+                clamped_points = int((effort_df["bpm"] > bpm_upper).sum())
+                if clamped_points > 0:
+                    st.caption(
+                        f"{clamped_points} point(s) above {int(bpm_upper)} bpm are shown at the right edge to keep the scale readable."
+                    )
+
+                effort_chart = (
+                    alt.Chart(effort_df)
+                    .mark_circle(size=70, opacity=0.6)
+                    .encode(
+                        x=alt.X(
+                            "bpm:Q",
+                            title="Heart rate (bpm)",
+                            scale=alt.Scale(domain=[110, bpm_upper], nice=False, clamp=True),
+                            axis=alt.Axis(tickMinStep=5, grid=True),
+                        ),
+                        y=alt.Y(
+                            "pace_min:Q",
+                            title="Pace (min/km)",
+                            scale=alt.Scale(domain=[3.0, 8.5], reverse=True, nice=False),
+                            axis=alt.Axis(tickMinStep=0.25, grid=True),
+                        ),
+                        tooltip=[
+                            alt.Tooltip("bpm:Q", title="BPM", format=".0f"),
+                            alt.Tooltip(
+                                "pace_min:Q", title="Pace (min/km)", format=".2f"
+                            ),
+                        ],
+                    )
+                )
+
+                effort_chart = effort_chart.properties(height=380)
+                st.altair_chart(effort_chart, use_container_width=True)
 
             if "activity_date" in clean_df.columns:
                 st.subheader("Distance Over Time")
@@ -290,13 +386,39 @@ with tab_trends:
 
                 daily_distance = daily_distance.sort_values("activity_date")
 
-                st.line_chart(daily_distance.set_index("activity_date")["distance_km"])
+                distance_over_time_chart = (
+                    alt.Chart(daily_distance)
+                    .mark_line()
+                    .encode(
+                        x=alt.X("activity_date:T", title="Date"),
+                        y=alt.Y("distance_km:Q", title="Distance (km)"),
+                        tooltip=[
+                            alt.Tooltip("activity_date:T", title="Date"),
+                            alt.Tooltip("distance_km:Q", title="Distance (km)", format=".2f"),
+                        ],
+                    )
+                    .properties(height=240)
+                )
+                st.altair_chart(distance_over_time_chart, use_container_width=True)
 
             if "elevation_gain" in clean_df.columns:
                 st.subheader("Elevation Gain vs Distance")
 
                 # compare terrain vs distance
-                st.scatter_chart(clean_df, x="distance_km", y="elevation_gain")
+                elevation_chart = (
+                    alt.Chart(clean_df.dropna(subset=["distance_km", "elevation_gain"]))
+                    .mark_circle(size=55, opacity=0.6)
+                    .encode(
+                        x=alt.X("distance_km:Q", title="Distance (km)"),
+                        y=alt.Y("elevation_gain:Q", title="Elevation gain (m)"),
+                        tooltip=[
+                            alt.Tooltip("distance_km:Q", title="Distance (km)", format=".2f"),
+                            alt.Tooltip("elevation_gain:Q", title="Elevation gain (m)", format=".0f"),
+                        ],
+                    )
+                    .properties(height=240)
+                )
+                st.altair_chart(elevation_chart, use_container_width=True)
 
             if "calories" in clean_df.columns:
                 st.subheader("Calories Over Time")
@@ -308,7 +430,20 @@ with tab_trends:
 
                 daily_calories = daily_calories.sort_values("activity_date")
 
-                st.line_chart(daily_calories.set_index("activity_date")["calories"])
+                calories_over_time_chart = (
+                    alt.Chart(daily_calories)
+                    .mark_line()
+                    .encode(
+                        x=alt.X("activity_date:T", title="Date"),
+                        y=alt.Y("calories:Q", title="Calories"),
+                        tooltip=[
+                            alt.Tooltip("activity_date:T", title="Date"),
+                            alt.Tooltip("calories:Q", title="Calories", format=".0f"),
+                        ],
+                    )
+                    .properties(height=240)
+                )
+                st.altair_chart(calories_over_time_chart, use_container_width=True)
 
 # endregion
 
