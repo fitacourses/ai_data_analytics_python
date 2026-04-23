@@ -153,11 +153,28 @@ if df is not None:
 def get_pace_df(clean_df):
     # Convert avg_pace from "MM:SS" into decimal minutes, and add pace_x_distance for weighted averages.
     # This function is used everywhere we need reliable pace numbers.
+    safe_cols = [
+        "activity_date",
+        "distance_km",
+        "avg_pace",
+        "pace_min",
+        "pace_x_distance",
+        "avg_heart_rate",
+        "duration",
+        "max_heart_rate",
+    ]
+
+    if clean_df is None:
+        return pd.DataFrame(columns=safe_cols)
+
+    if "avg_pace" not in clean_df.columns or "distance_km" not in clean_df.columns:
+        return pd.DataFrame(columns=safe_cols)
+
     pace_df = clean_df.dropna(subset=["avg_pace"]).copy()
-    pace_df = pace_df[pace_df["avg_pace"].str.contains(":")]
+    pace_df = pace_df[pace_df["avg_pace"].astype(str).str.contains(":")]
 
     # Split "MM:SS" and convert to a single float: minutes + seconds/60.
-    parts = pace_df["avg_pace"].str.split(":")
+    parts = pace_df["avg_pace"].astype(str).str.split(":")
     pace_df["pace_min"] = parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
 
     # Weighted pace component (pace * distance) for later aggregation.
@@ -188,6 +205,9 @@ def get_daily_pace_df(pace_df):
 def get_pace_df_with_types(clean_df):
     # Classify each run into a simple distance-based bucket for summaries.
     pace_df = get_pace_df(clean_df)
+
+    if pace_df.empty or "distance_km" not in pace_df.columns:
+        return pace_df
 
     # `pd.cut` maps a numeric value into a category based on distance bins.
     pace_df["run_type"] = pd.cut(
@@ -336,12 +356,18 @@ avg_pace = None
 total_calories = None
 
 if clean_df is not None:
-    # Total distance is straightforward (sum across all rows/activities).
-    total_distance = clean_df["distance_km"].sum()
+    if "distance_km" in clean_df.columns:
+        total_distance = clean_df["distance_km"].sum()
+    else:
+        total_distance = None
 
     pace_df = get_pace_df(clean_df)
 
-    if not pace_df.empty and pace_df["distance_km"].sum() > 0:
+    if (
+        not pace_df.empty
+        and "distance_km" in pace_df.columns
+        and pace_df["distance_km"].sum() > 0
+    ):
         # Use a distance-weighted pace so short runs do not skew the average too much.
         weighted_pace_sum = (pace_df["pace_min"] * pace_df["distance_km"]).sum()
         total_distance_km = pace_df["distance_km"].sum()
@@ -516,9 +542,7 @@ with tab_trends:
 
             # Smooth pace to highlight the longer-term direction (instead of day-to-day noise).
             daily_pace_df["pace_smooth"] = (
-                daily_pace_df["daily_pace_min"]
-                .rolling(window=5, min_periods=1)
-                .mean()
+                daily_pace_df["daily_pace_min"].rolling(window=5, min_periods=1).mean()
             )
             # Human-friendly pace string for tooltips (avoid confusing decimal minutes like 5.87).
             daily_pace_df["pace_smooth_mmss"] = daily_pace_df["pace_smooth"].apply(
@@ -547,9 +571,7 @@ with tab_trends:
                         ),
                         tooltip=[
                             alt.Tooltip("activity_date:T", title="Date"),
-                            alt.Tooltip(
-                                "pace_smooth_mmss:N", title="Pace (min/km)"
-                            ),
+                            alt.Tooltip("pace_smooth_mmss:N", title="Pace (min/km)"),
                         ],
                     )
                     .properties(height=260)
@@ -705,8 +727,8 @@ if clean_df is not None:
 
         if not best_pace_df.empty:
             parts = best_pace_df["best_pace"].str.split(":")
-            best_pace_df["best_pace_min"] = (
-                parts.str[0].astype(int) + (parts.str[1].astype(int) / 60)
+            best_pace_df["best_pace_min"] = parts.str[0].astype(int) + (
+                parts.str[1].astype(int) / 60
             )
 
             # Guardrail: ignore impossible paces (< 3:00 min/km).
@@ -747,7 +769,9 @@ if clean_df is not None:
     runs_df = get_effort_proxy_runs_df(clean_df)
     if not runs_df.empty:
         # Only keep rows where we can approximate total beats reliably.
-        efficiency_df = runs_df.dropna(subset=["distance_km", "duration_min", "bpm"]).copy()
+        efficiency_df = runs_df.dropna(
+            subset=["distance_km", "duration_min", "bpm"]
+        ).copy()
         efficiency_df = efficiency_df[
             (efficiency_df["duration_min"] > 0) & (efficiency_df["bpm"] > 0)
         ]
@@ -756,10 +780,12 @@ if clean_df is not None:
             # Efficiency formula:
             # - total beats is approximated from average bpm and duration
             # - meters_per_beat answers: "how many meters did I travel per heartbeat?"
-            efficiency_df["total_beats"] = efficiency_df["duration_min"] * efficiency_df["bpm"]
-            efficiency_df["meters_per_beat"] = (
-                (efficiency_df["distance_km"] * 1000) / efficiency_df["total_beats"]
+            efficiency_df["total_beats"] = (
+                efficiency_df["duration_min"] * efficiency_df["bpm"]
             )
+            efficiency_df["meters_per_beat"] = (
+                efficiency_df["distance_km"] * 1000
+            ) / efficiency_df["total_beats"]
 
             # Pick the run with the highest meters/beat.
             eff_row = efficiency_df.loc[efficiency_df["meters_per_beat"].idxmax()]
@@ -794,7 +820,9 @@ with tab_insights:
 
         with col2:
             if highest_elevation_gain_m is not None:
-                st.metric("Highest elevation gain (m)", f"{highest_elevation_gain_m:.0f}")
+                st.metric(
+                    "Highest elevation gain (m)", f"{highest_elevation_gain_m:.0f}"
+                )
                 if highest_elevation_distance_km is not None:
                     st.caption(f"Distance: {highest_elevation_distance_km:.2f} km")
                 if highest_elevation_date is not None:
@@ -804,7 +832,9 @@ with tab_insights:
 
         with col3:
             if most_efficient_m_per_beat is not None:
-                st.metric("Most efficient run (m/beat)", f"{most_efficient_m_per_beat:.2f}")
+                st.metric(
+                    "Most efficient run (m/beat)", f"{most_efficient_m_per_beat:.2f}"
+                )
                 details = []
                 if most_efficient_pace_min is not None:
                     details.append(
@@ -875,7 +905,9 @@ with tab_insights:
             st.subheader("Insights (last 7 days)")
 
             if last7.empty:
-                st.write("No runs logged in the last 7 days — let’s get a small streak going.")
+                st.write(
+                    "No runs logged in the last 7 days — let’s get a small streak going."
+                )
             else:
                 total_runs = int(len(last7))
                 total_km = float(last7["distance_km"].sum())
@@ -938,7 +970,9 @@ with tab_insights:
                         "Mostly easy/steady — great base work. If you want more speed, one controlled quality session is the next lever to pull."
                     )
                 else:
-                    st.info("Nice balance — this is the kind of week that stacks into progress.")
+                    st.info(
+                        "Nice balance — this is the kind of week that stacks into progress."
+                    )
 
             latest = runs_df.iloc[-1]
             latest_date = latest["activity_date"]
