@@ -4,6 +4,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import math
+import hashlib
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+import io
 
 # endregion
 
@@ -49,6 +54,130 @@ uploaded_files = st.file_uploader(
     "Upload Garmin CSV files", type=["csv"], accept_multiple_files=True
 )
 
+# ===== Local History (optional) =====
+# Saves uploaded CSVs to local disk so you can compare new activities with older ones later.
+# Note: in cloud deployments, filesystem storage may be ephemeral.
+HISTORY_DIR = Path(__file__).parent / ".upload_history"
+INDEX_PATH = HISTORY_DIR / "index.json"
+
+
+def _load_history_index():
+    if not INDEX_PATH.exists():
+        return {"version": 1, "files": {}}
+    try:
+        return json.loads(INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        # If index is corrupted, start fresh (avoid breaking the app).
+        return {"version": 1, "files": {}}
+
+
+def _save_history_index(index_data):
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    INDEX_PATH.write_text(json.dumps(index_data, indent=2), encoding="utf-8")
+
+
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def save_uploaded_files_to_history(files) -> tuple[int, int]:
+    """
+    Save uploaded Streamlit files to HISTORY_DIR.
+    Returns (saved_count, skipped_count) where skipped means "already exists".
+    """
+    if not files:
+        return (0, 0)
+
+    index_data = _load_history_index()
+    files_index = index_data.setdefault("files", {})
+
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    saved = 0
+    skipped = 0
+
+    for f in files:
+        data = f.getvalue()
+        file_hash = _sha256_bytes(data)
+        if file_hash in files_index:
+            skipped += 1
+            continue
+
+        out_path = HISTORY_DIR / f"{file_hash}.csv"
+        out_path.write_bytes(data)
+        files_index[file_hash] = {
+            "original_name": getattr(f, "name", "uploaded.csv"),
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+        }
+        saved += 1
+
+    _save_history_index(index_data)
+    return (saved, skipped)
+
+
+def load_history_csvs() -> pd.DataFrame:
+    index_data = _load_history_index()
+    files_index = index_data.get("files", {})
+    if not files_index:
+        return pd.DataFrame()
+
+    dfs = []
+    for file_hash, meta in files_index.items():
+        path = HISTORY_DIR / f"{file_hash}.csv"
+        if not path.exists():
+            continue
+        try:
+            df_part = pd.read_csv(path)
+            df_part["source_file"] = meta.get("original_name", f"{file_hash}.csv")
+            df_part["source_hash"] = file_hash
+            df_part["source_kind"] = "history"
+            dfs.append(df_part)
+        except Exception:
+            # Skip unreadable files rather than breaking the app.
+            continue
+
+    if not dfs:
+        return pd.DataFrame()
+    return pd.concat(dfs, ignore_index=True)
+
+
+with st.expander("Saved history (optional)", expanded=False):
+    history_index = _load_history_index()
+    history_count = len(history_index.get("files", {}))
+    st.caption(
+        f"Saved CSV files on disk: {history_count}. Useful for comparing new uploads with older runs."
+    )
+    use_history = st.checkbox("Include saved history in analysis", value=False)
+
+    col_h1, col_h2 = st.columns(2)
+    with col_h1:
+        if st.button(
+            "Save current uploads to history",
+            disabled=not uploaded_files,
+            use_container_width=True,
+        ):
+            saved_n, skipped_n = save_uploaded_files_to_history(uploaded_files)
+            if saved_n > 0:
+                st.success(f"Saved {saved_n} file(s) to history.")
+            if skipped_n > 0:
+                st.info(f"Skipped {skipped_n} already-saved file(s).")
+    with col_h2:
+        if st.button(
+            "Clear saved history",
+            disabled=history_count == 0,
+            use_container_width=True,
+        ):
+            # Remove index + files. Keep it simple and safe: only touch HISTORY_DIR.
+            try:
+                if INDEX_PATH.exists():
+                    INDEX_PATH.unlink()
+                if HISTORY_DIR.exists():
+                    for p in HISTORY_DIR.glob("*.csv"):
+                        p.unlink(missing_ok=True)
+            except Exception:
+                st.error("Could not clear history (filesystem permissions).")
+            else:
+                st.success("Saved history cleared.")
+
 # ===== Tabs =====
 # Keep the app simple: Overview, Trends, Insights.
 tab_overview, tab_trends, tab_insights = st.tabs(["Overview", "Trends", "Insights"])
@@ -59,19 +188,30 @@ tab_overview, tab_trends, tab_insights = st.tabs(["Overview", "Trends", "Insight
 
 df = None
 
-if uploaded_files:
-    dataframes = []
+dataframes = []
 
+if "use_history" in globals() and use_history:
+    history_df = load_history_csvs()
+    if not history_df.empty:
+        dataframes.append(history_df)
+
+if uploaded_files:
     # Read each uploaded CSV separately
     for file in uploaded_files:
-        current_df = pd.read_csv(file)
+        file_bytes = file.getvalue()
+        current_df = pd.read_csv(io.BytesIO(file_bytes))
 
-        # Add source file name to track where data comes from
+        # Add source tracking (helps debugging / future comparisons).
         current_df["source_file"] = file.name
+        current_df["source_hash"] = _sha256_bytes(file_bytes)
+        current_df["source_kind"] = "upload"
         dataframes.append(current_df)
 
-    # Concatenate all loaded files into one unified dataset
+if dataframes:
+    # Concatenate all loaded files into one unified dataset.
     df = pd.concat(dataframes, ignore_index=True)
+    # Prevent double-counting if the same activity appears in both history and uploads.
+    df = df.drop_duplicates().reset_index(drop=True)
 
 # endregion
 
